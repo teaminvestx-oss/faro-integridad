@@ -264,7 +264,7 @@ lo que prohíbe la primera línea de este documento.
 de metodología (`methodology_version`) y su clase (`asset_class`, derivada del
 símbolo por la whitelist — el analista jamás la elige ni la ve como campo).
 
-**Dónde está la línea (decisión de Joaquín, 2-ago · LIGA182).** El cierre por
+**Dónde está la línea (decisión del fundador, 2-ago · LIGA182).** El cierre por
 plazo es un hecho **futuro**, no un resultado ya ocurrido, así que la tabla por
 clase rige **toda señal viva**: una acción abierta vence a los 180 días aunque
 su fila venga sellada v1 o sin las columnas puestas (si `asset_class` falta, la

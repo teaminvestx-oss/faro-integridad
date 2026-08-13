@@ -259,25 +259,36 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
     for (const d of nuevos) lineas.push(`${d.fecha} ${d.digest} ${d.bloques.length}${d.inicial ? ' inicial' : ''}`);
     writeFileSync(indiceRuta, lineas.join('\n') + '\n');
 
-    /* El buscador: `id huella fecha`, una línea por señal anclada.
-     *
-     * NO es una fuente de verdad, y por eso se regenera entero en cada ejecución a partir
-     * de los archivos diarios: es un PUNTERO para que /verificar sepa en qué archivo mirar
-     * sin descargarlos todos. Quien verifica sigue teniendo que abrir el archivo del día y
-     * encontrar allí la huella; si este índice mintiera, la comprobación fallaría.
-     *
-     * Sin él, «pego una huella y quiero saber si está» obliga a bajarse el registro entero,
-     * que es exactamente el punto en el que Joaquín se quedó parado probándolo. */
-    const todas = leeAncladas(dir);
-    const filasIdx = [...todas.entries()]
+  }
+  /* El buscador: `id huella fecha`, una línea por señal anclada.
+   *
+   * NO es una fuente de verdad, y por eso se regenera entero en cada ejecución a partir
+   * de los archivos diarios: es un PUNTERO para que /verificar sepa en qué archivo mirar
+   * sin descargarlos todos. Quien verifica sigue teniendo que abrir el archivo del día y
+   * encontrar allí la huella; si este índice mintiera, la comprobación fallaría.
+   *
+   * Sin él, «pego una huella y quiero saber si está» obliga a bajarse el registro entero,
+   * que es exactamente el punto en el que se quedó parado el primero que lo probó.
+   *
+   * Y se escribe TAMBIÉN cuando no hay días nuevos, si falta o no cuadra con los
+   * archivos: la primera vez vivió dentro del `if (nuevos.length)` y la ejecución
+   * siguiente —«nada nuevo que anclar»— publicó el registro sin buscador, con el botón
+   * «Comprobar» de producción dando error hasta el digest siguiente. */
+  if (escribir) {
+    const filasIdx = [...leeAncladas(dir).entries()]
       .map(([id, v]) => ({ id, huella: v.huella, fecha: v.archivo.replace('.txt', '') }))
       .sort((a, b) => (a.fecha === b.fecha ? (a.id < b.id ? -1 : 1) : (a.fecha < b.fecha ? -1 : 1)));
-    writeFileSync(join(dir, 'indice.txt'), ['# FARO · buscador del registro de integridad',
+    const buscador = ['# FARO · buscador del registro de integridad',
       '# id de la señal · huella SHA-256 · archivo del día en que quedó anclada',
       '#',
       '# Es un ÍNDICE, no una prueba: la prueba es el archivo del día. Se regenera entero',
       '# en cada ejecución a partir de esos archivos. Ver getfaro.org/verificar', '',
-      ...filasIdx.map((f) => `${f.id} ${f.huella} ${f.fecha}`), ''].join('\n'));
+      ...filasIdx.map((f) => `${f.id} ${f.huella} ${f.fecha}`), ''].join('\n');
+    const ruta = join(dir, 'indice.txt');
+    if (!existsSync(ruta) || readFileSync(ruta, 'utf8') !== buscador) {
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(ruta, buscador);
+    }
   }
   return { nuevos, total: anclables, primeraVez, alteradas };
 }
