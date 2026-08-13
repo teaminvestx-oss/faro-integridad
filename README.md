@@ -18,9 +18,20 @@ Puedes comprobarlo tú, con `sha256sum` y sin pedirnos nada.
 ## Qué hay aquí
 
 ```
-cadena.txt          el índice: una línea por día, con su digest
-AAAA-MM-DD.txt      el archivo de cada día: el contenido sellado de cada señal y su huella
+integridad/
+  cadena.txt        el índice de la cadena: una línea por día, con su digest
+  AAAA-MM-DD.txt    el archivo de cada día: el contenido sellado de cada señal y su huella
+  indice.txt        el buscador: id de señal → huella → en qué archivo está
+tools/sellar.mjs    el generador, para que lo ejecutes tú (ver «La auditoría completa»)
+js/sello.js         la canonicalización: las reglas del formato, en código y comentadas
+docs/metricas.md    las fórmulas de las métricas que publica la web
 ```
+
+**Sobre `indice.txt`, para que nadie lo malinterprete:** es un *puntero*, no una prueba.
+Existe para que encuentres en qué archivo cayó una señal sin tener que abrirlos todos, y
+se regenera entero en cada ejecución a partir de los archivos diarios. La prueba es
+siempre el archivo del día: si este índice mintiera, la comprobación contra el archivo
+fallaría — y eso es exactamente lo que queremos que pase.
 
 Cada archivo diario contiene, por cada señal, su **payload canónico** —el texto exacto
 que se hashea— seguido de su huella. Al final, el digest del día y el del día anterior.
@@ -140,17 +151,29 @@ depende de tu lenguaje y de tu biblioteca JSON — `jq` 1.6 pierde dígitos ahí
 no. Por eso la regla es **copiar los caracteres**, no reimprimir el número. Nuestro
 generador lleva un escáner que preserva el literal en vez de un `JSON.parse`.
 
-### Rehaz nuestro trabajo entero
+### La auditoría completa, en un comando
 
-El generador no usa ninguna credencial: lee la misma API pública que acabas de usar tú y
-no escribe en ninguna base de datos. Puedes ejecutarlo y comparar:
+El generador **está en este mismo repositorio** (`tools/sellar.mjs` + `js/sello.js`) y no
+usa ninguna credencial: lee la misma API pública que acabas de usar tú y no escribe en
+ninguna base de datos. Con Node 18 o superior:
 
 ```bash
-node tools/sellar.mjs      # en el repositorio del producto
-diff -r integridad/ <este repositorio>/integridad/
+git clone https://github.com/teaminvestx-oss/faro-integridad
+cd faro-integridad
+node tools/sellar.mjs --check
 ```
 
-Si saliera cualquier diferencia, sería porque hemos tocado algo.
+Eso **recalcula la huella de todas las señales ancladas** contra la API pública y las
+compara con lo que hay publicado aquí. Si una señal sellada hubiera cambiado en la base
+de datos, lo imprime con su id y las dos huellas (`INCIDENCIA`). Si en cambio dice
+`faltaría integridad/<ayer>.txt` y sale con código 1, es que lo estás ejecutando **antes
+de las 03:10 UTC**, cuando el archivo de ayer aún no se ha generado — vuelve más tarde o
+genera tú ese archivo con `node tools/sellar.mjs` y compáralo cuando se publique.
+
+Una honestidad más: el **bloque inicial no se puede regenerar desde cero**, porque su
+forma depende del día en que se creó (todo lo anterior entró de golpe ese día). Sus
+huellas y su digest, una a una, sí: son aritmética sobre este archivo, como en el ejemplo
+de arriba.
 
 ---
 
@@ -164,12 +187,13 @@ Decirlo entero es parte del trato:
    huella. Esto fija lo que dijimos, no lo que hizo el mercado.
 3. **Una señal borrada antes de sellarse no deja rastro aquí.** Esto protege lo publicado;
    no prueba que no hubiera nada más.
-4. **Entre publicar una señal y verla anclada pueden pasar hasta 27 horas.** El digest se
-   genera una vez al día, a las 03:10 UTC, y cubre los días UTC **ya cerrados**: lo
-   publicado a las 00:05 de un día no entra hasta las 03:10 del siguiente. En esa franja
-   la integridad de una señal recién publicada sigue dependiendo de nuestra palabra, no de
-   estas huellas — y su ficha en getfaro.org lo dice mientras esté así. (El número redondo
-   sería «un día»; el real es 27 horas, y en un documento como este el real es el que va.)
+4. **Lo publicado un día queda anclado al día siguiente, no al instante.** La cadena va
+   por días UTC completos y el archivo de cada día se genera a la mañana siguiente, a las
+   03:10 UTC. En el peor caso —una señal publicada justo pasada la medianoche UTC— son
+   unas **27 horas**; si el trabajo programado se retrasa (pasa, en GitHub Actions), algo
+   más. En esa franja la integridad de una señal recién publicada sigue dependiendo de
+   nuestra palabra, no de estas huellas — y su ficha en getfaro.org lo dice mientras esté
+   así.
 5. **El anclaje empieza el día del primer digest.** Las señales anteriores se incorporaron
    todas en bloque ese día, en la primera línea de `cadena.txt`, marcada `inicial`. Para
    ellas, esto demuestra que no han cambiado **desde ese día**, no desde que se publicaron.
@@ -186,5 +210,6 @@ pregunta incómoda a un sistema que parezca más sólido de lo que es.
 
 ---
 
-*Generado automáticamente por [`.github/workflows/integridad.yml`](https://getfaro.org/metodologia).
-Licencia MIT.*
+*Generado automáticamente cada día a las 03:10 UTC por [`tools/sellar.mjs`](tools/sellar.mjs),
+que vive en este mismo repositorio. El proceso completo y sus límites, en
+[getfaro.org/metodologia](https://getfaro.org/metodologia). Licencia MIT.*
