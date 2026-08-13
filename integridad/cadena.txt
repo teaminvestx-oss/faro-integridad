@@ -1,0 +1,6 @@
+# FARO · índice de la cadena de integridad
+# fecha  digest  nº de señales  [inicial]
+# La fecha es el último día que cubre ese archivo, y el digest de cada día encadena
+# el del anterior. Ver getfaro.org/verificar
+
+2026-08-12 3e6073eec231622b84f2c525c158211af72fbac492d7bb078541527a3c9895e4 75 inicial
