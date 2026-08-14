@@ -1,0 +1,39 @@
+# FARO · integridad · 2026-08-13
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# Cubre las señales publicadas el 2026-08-13 (día UTC).
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+faro-sello-v1
+id=6a86fe39-a594-41c3-b24d-6d3df2b3cd88
+analista=bandito03
+simbolo=EURUSD
+direccion=long
+tipo=zone
+entrada=1.1537
+zona_min=1.1535
+zona_max=1.1537
+stop=1.1527
+objetivo1=1.1555
+objetivo2=
+publicada=2026-08-13T13:14:58.274+00:00
+metodologia=v2
+tesis_sha256=9d4d04d01e019f6b40a868a4c3dbea02c4ceaf18a36ec04701c157a0b186d578
+huella=0bb90b9f85eef3f3a29c4475b078e11d7a1d354543c8e815d95b709f4b104b26
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-08-13
+#   anterior=3e6073eec231622b84f2c525c158211af72fbac492d7bb078541527a3c9895e4
+#   0bb90b9f85eef3f3a29c4475b078e11d7a1d354543c8e815d95b709f4b104b26
+digest=44d211eb188a3966d08edf789ef23f1aa1c05530a29850b7c50213e5387d4962
+anterior=3e6073eec231622b84f2c525c158211af72fbac492d7bb078541527a3c9895e4
+senales=1
