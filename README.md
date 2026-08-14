@@ -19,12 +19,13 @@ Puedes comprobarlo tú, con `sha256sum` y sin pedirnos nada.
 
 ```
 integridad/
-  cadena.txt        el índice de la cadena: una línea por día, con su digest
-  AAAA-MM-DD.txt    el archivo de cada día: el contenido sellado de cada señal y su huella
-  indice.txt        el buscador: id de señal → huella → en qué archivo está
-tools/sellar.mjs    el generador, para que lo ejecutes tú (ver «La auditoría completa»)
-js/sello.js         la canonicalización: las reglas del formato, en código y comentadas
-docs/metricas.md    las fórmulas de las métricas que publica la web
+  cadena.txt          el índice de la cadena: una línea por día, con su digest
+  AAAA-MM-DD.txt      el archivo de cada día: el contenido sellado de cada señal y su huella
+  AAAA-MM-DD.txt.ots  la prueba de tiempo de ese archivo (OpenTimestamps → Bitcoin)
+  indice.txt          el buscador: id de señal → huella → en qué archivo está
+tools/sellar.mjs      el generador, para que lo ejecutes tú (ver «La auditoría completa»)
+js/sello.js           la canonicalización: las reglas del formato, en código y comentadas
+docs/metricas.md      las fórmulas de las métricas que publica la web
 ```
 
 **Sobre `indice.txt`, para que nadie lo malinterprete:** es un *puntero*, no una prueba.
@@ -177,6 +178,37 @@ de arriba.
 
 ---
 
+## La prueba de tiempo (OpenTimestamps)
+
+Todo lo anterior demuestra **qué** se publicó; los `.ots` demuestran **cuándo**. Cada
+archivo diario se sella con [OpenTimestamps](https://opentimestamps.org): su SHA-256 se
+agrega, junto a miles de hashes de otra gente, en una transacción de **Bitcoin**. Desde
+ese momento, «este archivo existía en la fecha del bloque» lo demuestra la cadena de
+bloques — no FARO, no GitHub.
+
+**El ciclo, para que nada te sorprenda:**
+
+- Al sellar, el `.ots` nace **pendiente**: contiene los compromisos de los calendarios,
+  no todavía el bloque. Cuando la transacción confirma (horas), la ejecución del día
+  siguiente lo **completa** (`ots upgrade`) y el `.ots` cambia por última vez.
+- Por eso los `.ots` son **lo único de este registro que puede modificarse** después de
+  publicado — exactamente una vez, de pendiente a completo, y es el protocolo OTS, no
+  una reescritura. Los `.txt` no cambian jamás; eso lo vigila el propio flujo.
+- Los archivos anteriores al sellado se sellaron **cuando se activó** (backfill): su
+  prueba dice que existían en esa fecha, no antes. La misma honestidad que el bloque
+  inicial.
+
+**Verifícalo tú**, de más fácil a más purista:
+
+1. **Sin instalar nada**: abre <https://opentimestamps.org>, arrastra el archivo `.txt`
+   y su `.ots`. Te dice en qué bloque de Bitcoin está anclado.
+2. **Cliente JavaScript**, verifica contra exploradores públicos de bloques.
+3. **El de referencia** (`pip install opentimestamps-client`):
+   `ots verify integridad/AAAA-MM-DD.txt.ots` — contra tu propio nodo de Bitcoin, sin
+   fiarte ni de los exploradores.
+
+---
+
 ## Qué demuestra esto, y qué no
 
 Decirlo entero es parte del trato:
@@ -202,8 +234,11 @@ Decirlo entero es parte del trato:
 6. **Esto todavía no es una prueba criptográfica de tiempo.** Las fechas de un commit de
    git las pone quien firma y son falsificables, y este repositorio es nuestro: podríamos
    reescribir la historia. Lo que no podríamos es hacerlo sin que lo notara quien ya
-   tuviera una copia — por eso clonarlo tiene sentido. La prueba de tiempo llegará con
-   **OpenTimestamps** sobre Bitcoin, que está en el plan y todavía no está hecho.
+   tuviera una copia — por eso clonarlo tiene sentido. La prueba de tiempo de verdad son
+   los `.ots` de OpenTimestamps sobre Bitcoin, que **ya se están generando** (sección de
+   arriba) — pero esta frase no se retira hasta que las primeras pruebas estén
+   **completas y verificadas** contra la cadena de bloques. Reclamarlo antes sería
+   vendernos por encima de lo hecho.
 
 Si algo de esto te parece insuficiente, tienes razón en decirlo: escríbenos. Preferimos la
 pregunta incómoda a un sistema que parezca más sólido de lo que es.
