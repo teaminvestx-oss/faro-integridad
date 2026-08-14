@@ -231,14 +231,17 @@ Decirlo entero es parte del trato:
    ellas, esto demuestra que no han cambiado **desde ese día**, no desde que se publicaron.
    (Ese archivo lleva por nombre el último día que cubre; la fecha en que se incorporó está
    escrita en su cabecera.)
-6. **Esto todavía no es una prueba criptográfica de tiempo.** Las fechas de un commit de
-   git las pone quien firma y son falsificables, y este repositorio es nuestro: podríamos
-   reescribir la historia. Lo que no podríamos es hacerlo sin que lo notara quien ya
-   tuviera una copia — por eso clonarlo tiene sentido. La prueba de tiempo de verdad son
-   los `.ots` de OpenTimestamps sobre Bitcoin, que **ya se están generando** (sección de
-   arriba) — pero esta frase no se retira hasta que las primeras pruebas estén
-   **completas y verificadas** contra la cadena de bloques. Reclamarlo antes sería
-   vendernos por encima de lo hecho.
+6. **El cuándo lo atestigua Bitcoin, con sus matices.** Las fechas de un commit de git
+   las pone quien firma y son falsificables — por eso no son la prueba. La prueba son
+   los `.ots` de OpenTimestamps (sección de arriba): un bloque de Bitcoin da fe de que
+   cada archivo existía en su fecha, y cualquiera puede comprobarlo arrastrando archivo
+   y prueba en <https://opentimestamps.org>. Los matices: una prueba recién sellada nace
+   *pendiente* y se completa cuando Bitcoin confirma (horas); y los archivos ya
+   publicados cuando se activó el sellado quedaron probados **desde su sellado**, no
+   desde su publicación — la fecha exacta la lleva cada prueba dentro. (Esta línea decía
+   «todavía no es una prueba criptográfica de tiempo» hasta que la primera prueba quedó
+   completa en el bloque **962376** y fue verificada de forma independiente; solo
+   entonces se cambió.)
 
 Si algo de esto te parece insuficiente, tienes razón en decirlo: escríbenos. Preferimos la
 pregunta incómoda a un sistema que parezca más sólido de lo que es.
