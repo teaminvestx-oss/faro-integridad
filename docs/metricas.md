@@ -143,44 +143,154 @@ Hipótesis: 1.000€ invertidos en cada señal abierta. Es ilustrativo, no real.
 Es un **hecho actual** sobre las señales abiertas (no un historial), por eso no
 se le aplican el cap ni la muestra mínima del win rate.
 
+### Drawdown máximo vs. peor señal — dos «%» de bases distintas
+```
+curva:     equity = 100, y por cada cierre  equity += retorno %
+drawdown = máx( (pico − equity) / pico · 100 )     ← sobre la CURVA acumulada
+peor señal = mín( retorno % de una señal cerrada ) ← sobre UNA operación
+```
+**El drawdown puede salir MENOR que la peor señal y ser los dos correctos**, y esto
+se lee como un error de cálculo si no se dice (detectado el 15-ago sobre un perfil
+con «−2,6% drawdown» y «−5,0% peor señal»). El motivo es la base: una señal
+de −5% sobre una curva que va por 290 la deja en 285, y eso es un −1,7% desde su
+máximo. Cuanto más alto llega el acumulado, menos pesa cada pérdida individual en
+el drawdown.
+
+Por eso ambas casillas **declaran su base en la propia etiqueta** —«drawdown máx ·
+de la curva» y «peor señal · una operación»— y sus tooltips se remiten mutuamente:
+esconder la explicación en el glosario dejaba a la vista dos cifras que parecen
+contradecirse. La fórmula del drawdown no se toca: ni puntos aditivos sueltos (−60
+puntos sobre una cartera en +300% no es perder el 60%) ni compuesto a todo-o-nada
+(daba un 49,6% que no casaba con el gráfico) — decidido el 8-jul-2026.
+
 ### Racha (puntos verdes/rojos)
 Secuencia de las últimas señales cerradas (más reciente primero):
 verde = ganada (TP), rojo = perdida (SL). Sin datos de cierre cargados se
 muestra «sin cierres aún» — el patrón ilustrativo se eliminó (jul-2026):
 nunca se pintan rachas inventadas.
 
-### Niveles de analista — `_trLevel(nPublicadas, winRate, mtm12)`
+### Niveles de analista — `_trLevel(nPublicadas, gates)` (metodología v3 · 15-ago-2026)
 | Nivel | Requisitos |
 |---|---|
-| Élite | ≥ 80 **publicadas** · ≥ 60% acierto (sobre cerradas) · rentab. total 12m > 0 |
-| Destacado | ≥ 40 **publicadas** · ≥ 55% acierto (sobre cerradas) · rentab. total 12m > 0 |
-| Verificado | ≥ 20 **publicadas** |
+| Élite | ≥ 80 **publicadas** · ≥ 18 **meses de historial** · **R a mercado 12m > 0**, también **sin su mejor señal** · y **R a mercado 24m > 0** |
+| Destacado | ≥ 40 **publicadas** · ≥ 6 **meses de historial** · **R a mercado 12m > 0**, también **sin su mejor señal** |
+| Verificado | ≥ 20 **publicadas** · ≥ 3 **meses de historial** |
 | Nuevo | el resto |
 
-El **volumen** se mide en publicadas (ver arriba: es lo que acredita transparencia);
-el **acierto** y la **rentabilidad** siguen saliendo de las cerradas y del
-mark-to-market. Consecuencia asumida (LIGA130): «Verificado» solo exige volumen, así
-que un analista con 20 publicadas y ningún cierre alcanza esa división — que es
-exactamente lo que la metodología dice que significa («acredita transparencia, no
-calidad»). Su **% de acierto seguirá marcado «provisional»** hasta las 20 cerradas, y
-las divisiones promocionadas (Destacado y Élite) son inalcanzables sin cierres porque
-exigen acierto y rentabilidad positiva.
+Las puertas salen de **una sola llamada** a `FaroMetrics.nivelGates(señales)` →
+`{meses, r12, r12SinMejor, r24}`:
 
-Los mismos umbrales están replicados en `supabase/functions/badge/index.ts` (Deno) y
-`tests/badge.test.mjs` comprueba que no divergen del front.
+- **`meses`** — antigüedad desde la señal publicada más antigua no anulada
+  (`signal_date`), en meses de 30,44 días, redondeando hacia abajo. Solo se cumple
+  publicando y esperando: no se puede comprar ni fabricar.
+- **`r12` / `r24`** — R acumulada a mercado (cerradas sin acotar + abiertas al último
+  precio acotadas a −1R) con los cierres en ventana de 12 / 24 meses.
+- **`r12SinMejor`** — la misma R a 12 meses **excluyendo la mejor contribución
+  individual**. Es la puerta anti-chiripa: un único acierto grande no puede sostener un
+  nivel promocionado. Con menos de 2 contribuciones con stop vale `null`
+  (quitar «la mejor» de una muestra de una no mide nada).
+- **`null` en cualquier puerta = inevaluable = NO se aprueba.** Quien no tiene ningún
+  stop registrado no asciende: la condición no se puede evaluar y no se le asigna un
+  stop a posteriori. Permanece en el nivel que sus otras puertas le den.
 
-### Orden del ranking (LIGA170)
+**El % de acierto dejó de ser criterio de nivel en la v3.** Sigue publicándose como
+dato descriptivo (con su «provisional» hasta las 20 cerradas), pero no abre ni cierra
+niveles: era el único criterio fabricable eligiendo qué cerrar y qué dejar abierto, y
+premiaba cerrar pronto las ganadoras. La escalera v2 (20/40/80 + 55%/60% de acierto +
+R 12m > 0), vigente del 1 al 15 de agosto de 2026, queda publicada en la metodología
+§5 («Qué cambió en la v3, y por qué»).
+
+**La puerta de rentabilidad se mide en R desde LIGA239**, y no es la misma condición en
+otra unidad: cambia quién asciende. Un cierre de +50% con el stop lejos (+0,5R) más diez
+pérdidas de −1% con stops muy cerca (−1R cada una) da **suma de rendimientos +40%** y
+**R acumulada −9,5R**: con la vara anterior ese analista ascendía; con esta, no. Se
+evalúa **a mercado** (cerradas + abiertas al último precio) porque hacerlo solo sobre lo
+realizado permitiría ascender manteniendo indefinidamente abiertas las perdedoras — el
+mismo sesgo que el «total a mercado» existe para cerrar.
+
+**Panel de progreso privado (LIGA-5).** El analista ve en su propio perfil su camino al
+nivel siguiente: volumen y antigüedad con número y barra; las puertas de rentabilidad
+(r12, sin-mejor, r24) **solo como ✓/✗, jamás con el valor ni la distancia** — publicar
+cuánto falta diría qué operación abrir para cruzar el umbral. La misma regla rige el
+checklist público del perfil: la fila «sin su mejor señal» es binaria. Ese panel no
+existe en el HTML prerenderizado ni en ninguna ruta pública.
+
+Los mismos umbrales y puertas están replicados en `supabase/functions/badge/index.ts`
+(Deno: `contribR`/`nivelGates`/`tierOf`) y `tests/badge.test.mjs` comprueba que no
+divergen del front. Esa réplica incluye desde LIGA239 su propia copia de `signalR`/R
+total a mercado, con las mismas reglas.
+
+### Orden del ranking (LIGA170 · métrica sustituida en LIGA239)
 ```
-orden (dentro de cada división) = Σ retorno realizado del periodo (12m/3m/1m)
+orden (dentro de cada división) = R acumulada a mercado del periodo
+                                = Σ R de cerradas de la ventana + Σ R flotante de abiertas
 ```
-- Aditivo y SOLO señales cerradas de la ventana: el flotante se enseña en la fila
-  («no puntúa») y jamás ordena (regla LIGA154, intacta). El número grande de la
-  fila ES la clave de orden.
-- La media por operación, el acierto (con muestra), la R media y las entradas
-  alcanzadas acompañan en la fila; sin filtro de clase se añade el «total a
-  mercado» de por vida (el mismo titular del perfil). Con filtro de clase no:
-  sería un número global junto a métricas de una clase (regla LIGA152).
-- Sin «media anual»: anualizar ventanas parciales es una proyección disfrazada.
+- El número grande de la fila ES la clave de orden (regla LIGA170, permanente:
+  rankear por una cifra y enseñar otra confunde). Lo que cambió en LIGA239 es la
+  cifra, por dos motivos:
+  1. **Comparabilidad.** Σ de rendimientos suma un +2% de divisas con un +60% de
+     cripto como si fueran lo mismo, y premia a quien arriesga más por operación
+     aunque opere peor. R normaliza por el riesgo que el propio analista declaró al
+     poner el stop, y es lo único que permite comparar oro con una acción.
+  2. **El flotante PUNTÚA** (esto revierte LIGA154). Dejarlo fuera del orden abre un
+     agujero peor que el ruido que evitaba: se sube en el ranking no cerrando las
+     perdedoras. El nerviosismo queda acotado por construcción — la R flotante se
+     limita a −1 y el plazo por clase obliga a cerrar en 60–180 días.
+- **Sin señales con stop → `null`, jamás `0R`**: esa fila cae al final de su división
+  rotulada «R no disponible». Un 0 se lee «ni ganó ni perdió»; lo cierto es «no se
+  puede saber».
+- Las abiertas entran **enteras** aunque haya ventana: una posición viva es riesgo de
+  HOY, no del periodo en que se abrió (misma convención que `trackRecord` para el %).
+- **Empate técnico aparte: quien tiene 0 cerradas va al final de su división**
+  (LIGA-6), por alta que sea su R flotante. La R se enseña entera y el flotante sigue
+  puntuando —es lo que impide subir no cerrando las perdedoras—, pero un resultado
+  flotante no es un resultado hasta que se cierra, y adelantar con él a quien sí tiene
+  historial contradice la pregunta que encabeza la página.
+- La **suma de rendimientos** (el titular anterior) no desaparece: baja a la línea
+  secundaria junto a la media por operación, el acierto (con muestra), la R media y
+  las entradas alcanzadas. Sin «media anual»: anualizar ventanas parciales es una
+  proyección disfrazada.
+
+**La línea secundaria (LIGA-6): un set fijo de campos, en `RK_CAMPOS`.**
+`acierto · media/op · suma de rendimientos · R media · entradas · stop medio ·
+abiertas`. **Todas** las filas los recorren enteros y escriben «—» donde no hay dato:
+antes cada campo se añadía solo si existía y dos filas nunca eran comparables (una
+decía «suma de rendimientos» y la de al lado «flotante», y el lector no sabía si el
+dato faltaba o el analista no lo tenía). Reglas del set:
+
+- **El flotante va en R, no en %** (LIGA-6). Un «flotante +16,5%» junto a un titular
+  «+7,05R» —las dos cifras a mercado— se leía como una contradicción de la misma
+  magnitud consigo misma. Sin abiertas se escribe «sin abiertas», no se omite.
+- **La distancia media al stop entra en la fila** (LIGA-6): una R alta con stops muy
+  estrechos no es la misma R que con stops holgados, y desde el ranking no había cómo
+  distinguirlas. Se calcula sobre las señales de **la misma ventana y clase** que el
+  resto (regla LIGA152), igual que las entradas alcanzadas.
+- **La traducción «≈ X% arriesgando 1%» no se imprime**: vive en el `title` de la
+  cifra R y, para móvil, en el desplegable «ⓘ Qué es una R». Impresa, era un
+  porcentaje entre porcentajes de otras cosas — el problema que LIGA-6 vino a cerrar.
+- El «total a mercado» de por vida **no vuelve** a esta línea (LIGA-3): ver la sección
+  del ranking arriba y el glosario `mtm` del perfil.
+
+### Suma de rendimientos — el nombre honesto de la métrica anterior
+```
+suma de rendimientos = Σ retorno % de las señales cerradas del periodo
+```
+Se llamaba «rentabilidad acumulada» y esa etiqueta afirmaba algo falso: **no es la
+rentabilidad de ninguna cartera**. Para serlo harían falta tres supuestos que no se
+cumplen — el 100% del capital en cada señal, sin composición y sin solapamiento
+temporal. El número no era incorrecto; la palabra que lo describía, sí. Sigue visible
+en la fila del ranking, en la ficha de perfil y como **cifra principal de la tarjeta
+compartible** (ahí es deliberado: es la cifra que un lector entiende sin explicación).
+
+### Distancia media del stop — `avgStopDistancePct(señales)`
+```
+distancia media = media de |entrada − stop| / entrada · 100   (solo señales con stop)
+```
+El contexto obligatorio de R. R normaliza por el riesgo DECLARADO, y quien lo declara es
+el analista al poner el stop: dos analistas con la misma R media pueden ser un intradía
+con stops al 0,3% y un swing con stops al 8%. Sin este dato, el lector concluye «opera
+mejor» donde lo que hay es «opera distinto». FARO no prohíbe ningún estilo: lo enseña —
+la misma doctrina que publicar el flotante y acompañar el acierto de su muestra.
 
 ### Proximidad de zonas (Escenarios)
 ```
@@ -492,3 +602,121 @@ retorno_j = signalReturnPct(entry, closed_price, bias)   (guard ±500%)
   reales de índices en el cliente y no se fabrican.
 - Rotulada siempre: «Simulación hipotética con capital imaginario… calculada
   sobre señales reales ya cerradas».
+
+## La dirección no se supone nunca (LIGA-13 · auditoría externa 15-ago-2026)
+
+```
+dirDeclarada(bias) = 'long' | 'short' | null      ← null si no consta
+signalReturnPct(entry, exit, bias) = null  si dirDeclarada(bias) == null
+signalR(señal, precio)             = null  si dirDeclarada(señal.bias) == null
+```
+
+Un auditor externo sacó por `/verificar` el payload sellado de una señal y encontró
+`direccion=` vacío. El sello era **honesto** —escribe lo que la API devuelve, y esa
+señal se publicó sin dirección— y el generador no tenía bug. Lo que sí lo tenía era
+todo lo demás: la app rellenaba el hueco con `'long'` en 19 puntos, así que enseñaba
+«↑ Long» y publicaba un rendimiento calculado como largo. En una señal con entrada 270
+y precio 300, eso son **+11,1% publicados donde lo cierto es «no se puede saber»**; si
+hubiera sido corta, −11,1%.
+
+- **Sin dirección declarada no hay resultado.** Ni %, ni R, ni entrada en los
+  agregados: la señal se cuenta como publicada (y como abierta, si lo está) pero no
+  aporta rendimiento, igual que una señal sin stop no aporta R.
+- **La interfaz lo dice**, no deja el hueco mudo: «Sin dirección declarada» donde iría
+  LONG/SHORT, en gris —ni el verde de larga ni el rojo de corta— y con el porqué en el
+  tooltip. Tampoco viaja fuera: la tarjeta compartible exporta `null`, no una
+  suposición.
+- **`isLong` sobrevive solo para geometría** (qué lado de la barra es riesgo y cuál
+  recompensa). Lo que no puede volver a hacer es entrar en el cálculo: pasarle
+  `isLong ? 'long' : 'short'` a `signalReturnPct` devolvía la suposición ya convertida,
+  y esa era la puerta de atrás por la que el % inventado seguía saliendo.
+- **Ninguna señal nueva puede nacer así**: `validateSignalPayload` exige `long`/`short`
+  desde antes del hallazgo, y el webhook publica siempre a través de `create-signal`.
+  Las históricas afectadas se quedan como están —tocar el dato cambiaría su huella y
+  rompería la verificación contra lo ya anclado— pero dejan de mentir en pantalla.
+
+**Por qué no lo cazamos antes:** no faltaba un test, **sobraba** uno. En
+`tests/metrics.test.mjs` estaba escrito «bias ausente se trata como long» como
+comportamiento correcto, así que la suposición pasaba todas las revisiones. Ese test
+está ahora invertido, y `tests/liga230.test.mjs` comprueba además que ningún campo
+obligatorio del payload quede vacío — la verificación de **completitud** que no
+existía, distinta de la de **formato**, que sí existía y nunca falló.
+
+## Y el arreglo se dio por terminado a medias (LIGA-15 · 15-ago-2026)
+
+LIGA-13 arregló la ficha de señal y `js/metrics.js`, y ahí se dio por cerrado el
+asunto. No lo estaba: la misma suposición seguía viva en **siete superficies más**,
+y tres de ellas ni siquiera son la app, así que aquel arreglo no podía alcanzarlas.
+
+| Superficie | Qué publicaba con la dirección supuesta |
+|---|---|
+| Badge embebible | % de acierto, R **y el nivel** — servido dentro de webs de terceros |
+| Imagen al compartir | el % del perfil, visible en cualquier previo de enlace |
+| Perfiles `/a/<alias>` | columna «larga» en la tabla de cerradas, en páginas que indexa Google |
+| Telegram | «↑ alcista» al publicar y el retorno al cerrar — difusión que no se corrige |
+| `recalc-levels` | **persistía** acierto y nivel en la base de datos |
+| Portada | «↑ Long» en el widget de señales activas |
+| Búsqueda por activo | «↑ Subida» en la ficha resumida |
+
+La lección no es que faltara un arreglo: es que **nada impedía dar por terminado un
+arreglo a medias**. Por eso lo que más vale de LIGA-15 no es ninguna de esas siete
+correcciones, sino el guardián de `tests/liga-15.test.mjs`, que lee las columnas
+selladas del propio `js/sello.js` y recorre las trece superficies buscando cualquier
+`campo || 'valor'`. Los casos legítimos se declaran uno a uno con su motivo, y la
+deuda conocida va inventariada para que solo pueda encoger.
+
+### El efecto secundario que trajo el propio arreglo
+
+Al dejar de suponer la dirección, `_sigWon` empezó a devolver `false` para las señales
+cuyo retorno ya no se puede calcular. Esas señales pasaron de **ganadas por suposición**
+a **perdidas por defecto**: el mismo invento con el signo cambiado, y encima
+penalizando a quien no tiene culpa del dato que falta.
+
+```
+sigGanadora(señal) = true | false | null       ← null = no se puede saber
+aciertoDe(señales) = {wins, n, inevaluables}   ← n EXCLUYE las inevaluables
+```
+
+Tres de los cinco cierres se deciden por el estado y no necesitan dirección (tocar
+objetivo es ganar, tocar stop es perder). Los otros dos —cierre por plazo y cierre
+anticipado del analista— se deciden por el **signo del retorno real**, y ese signo no
+existe sin dirección: subir es ganar en una larga y perder en una corta.
+
+- Una señal inevaluable **sale de la muestra entera**: ni numerador ni denominador.
+  Con 3 cerradas de las que una no se puede juzgar, el acierto es «1 de 2», no «1 de 3».
+- **Tampoco pinta veredicto**: ni punto rojo en el historial, ni color de perdedora en
+  la tarjeta, ni emoji 🔴 en Telegram, ni celda roja en el perfil estático. Un color es
+  una afirmación como cualquier otra.
+- El resumen mensual cuenta **tres cubos** (ganadas, perdidas, sin determinar) en vez
+  de deducir las perdidas restando, que era como acababan ahí sin que nadie lo decidiera.
+- «N cerradas» sigue contándolas todas: son cierres reales. Lo que cambia es la muestra
+  del **acierto**, y por eso las dos cifras pueden no coincidir.
+
+## Un campo ausente no se rellena nunca (LIGA-16 · 15-ago-2026)
+
+LIGA-13 y LIGA-15 cerraron la dirección. La auditoría de la interfaz enseñó que la
+dirección era un caso de un patrón: **seis campos más se rellenaban con un valor por
+defecto cuando el dato no existía**. Todos corregidos, por orden de daño:
+
+| Campo | Qué enseñaba inventado | Ahora |
+|---|---|---|
+| `status` | «Señal activa», banda en vivo y **fecha de vencimiento** calculada | «Señal sin estado declarado»; ni resultado ni vencimiento |
+| euros de «Ganaste» | euros del **nivel de objetivo**, o un «+0 €», bajo el rótulo del resultado real | el objetivo alcanzado se afirma; la cifra solo si se puede calcular |
+| marcador del analista | los contadores de `traders`, que escribe un cron **semanal** | se calcula en vivo, con la misma muestra que el % de acierto |
+| `currency` | los niveles sellados con un **«$» supuesto** | precio desnudo: mejor sin unidad que con una unidad falsa |
+| `methodology_version` | «metodología v1» sobre un campo **sellado y vacío** | «metodología no declarada» |
+| `trader_id` | atribuía la señal a **«InvestX»**, que es una cuenta real | «Analista no identificado» |
+
+Y uno que apareció al escribir su propia prueba: **`fmtPrice(null)` imprimía «0 €»**.
+`Number(null)` es 0 y 0 es finito, así que una señal sin stop declarado enseñaba
+«Stop 0 $» — un nivel de precio inventado sobre un campo sellado. Ningún activo que
+publica FARO cotiza a cero: un 0 ahí solo puede ser un hueco.
+
+**La regla, sin excepciones:** si el dato no existe, la interfaz no enseña un valor.
+Ni uno plausible, ni un cero, ni un color, ni un emoji, ni una fecha. Se dice el hueco.
+
+Lo que sostiene la regla no son estas seis correcciones sino el guardián de
+`tests/liga-15.test.mjs`: lee las columnas selladas del propio `js/sello.js` y recorre
+trece superficies —las de la app y las de Deno— buscando cualquier `campo || 'valor'`.
+Los casos legítimos se declaran uno a uno con su motivo; la deuda pendiente va
+inventariada para que solo pueda encoger. Tras LIGA-16 ese inventario está **vacío**.
