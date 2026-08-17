@@ -312,6 +312,41 @@ short por `zone_low`) o el **cierre de la vela** si quedó entera dentro. El
 evento `activated` lleva `via: "vela_15m"` y la vela usada — auditable. Una
 zona expirada jamás se reactiva.
 
+### A qué precio cierra una señal (LIGA-33)
+Antes se grababa `regularMarketPrice`, un número suelto: con el mercado abierto es
+el precio vivo, con el mercado **cerrado** se queda congelado en el cierre de la
+sesión. El DAX cierra a las 17:30 y `update-prices` sigue pasando por la tarde-noche,
+así que casi todas las pasadas sobre una señal del DAX caían con el mercado cerrado y
+el cierre se grababa decenas de puntos más allá del nivel. Su fallo gemelo: una señal
+que tocaba el objetivo y volvía **antes** del siguiente sondeo no se cerraba nunca.
+
+Mirar más a menudo no arregla ninguno de los dos — fuera de horario el número es el
+mismo. El motor **lee la sesión**:
+
+- Se **detecta** con el recorrido de cada vela (máximo y mínimo), no con el último
+  precio. Velas de **1 minuto**, con respaldo a 5 m y 15 m.
+- Se **rellena en el NIVEL**. Única excepción: si la vela **abrió ya pasada** el nivel,
+  ahí no había forma de ejecutar y el relleno es su **apertura**. Es un hueco, y vale en
+  los dos sentidos: en contra pierde más de −1R, a favor da más que el objetivo.
+- Si **una misma vela** tocó stop y objetivo, manda el **stop**: dentro de una vela no se
+  sabe cuál llegó primero, y esa duda no se resuelve a favor del analista. Entre velas
+  distintas sí se sabe, y manda la primera.
+- Solo cuentan las velas **posteriores** a que la señal existiera.
+- La **fecha** del cierre es la de la vela, no la del día en que se detecta.
+- **Sin velas** (proveedor caído) se cierra igual, pero rellenando **en el nivel** — nunca
+  en el precio del sondeo, que es el fallo que todo esto corrige.
+
+**Qué objetivo cierra.** El **primero** que el precio puede alcanzar, y solo ese: el más
+cercano a la entrada de los declarados, elegido por **nivel** y no por el nombre del campo
+(`hit_tp1`/`hit_tp2` dice de cuál salió). El motor comprobaba el TP2 **antes** que el TP1,
+así que una señal que pasaba de largo por los dos se apuntaba el segundo — un nivel al que
+llegó después de que el primero hubiera cerrado la posición. Además dejaba un agujero:
+con «cuenta el mejor de los dos», declarar un TP2 lejísimos sale gratis, nunca perjudica y
+a veces regala. Es la «salida única» que este documento ya declaraba más abajo.
+
+El evento del cierre lleva el precio grabado, el del sondeo y `via` (`vela`,
+`nivel_sin_velas` o `plazo`): un cierre tiene que poder explicarse solo.
+
 ## Múltiplo R — riesgo normalizado (LIGA144)
 
 `FaroMetrics.signalR(signal, price)` · `FaroMetrics.rTrackRecord(signals, opts)`
@@ -333,9 +368,14 @@ de oro con una de una acción. Un stop tocado limpiamente es **−1R**.
    `Number(null)` vale 0, y con la versión ingenua una señal sin stop daba stop 0,
    riesgo = entrada y una R inventada de +0,20R. `signals.sl` es *nullable* en el
    esquema y las señales antiguas lo tienen a `null`, así que esto no es hipotético.
-2. **R se calcula sobre el precio REAL de salida** (`closed_price`, el sondeo del
-   proveedor), nunca sobre el nivel teórico. Un hueco que salta el stop cierra peor
-   que el stop → **peor que −1R**, y así se publica.
+2. **R se calcula sobre el precio REAL de salida** (`closed_price`). Desde LIGA-33 ese
+   precio es **el nivel tocado**, leído en las velas de la sesión — antes era el sondeo
+   del proveedor, y con el mercado cerrado el sondeo se queda congelado en el cierre de
+   sesión: una señal que tocaba su objetivo se grababa decenas de puntos más allá, y
+   siempre en la dirección que favorecía al analista. La única salida que no es el nivel
+   es el **hueco**: si la vela abrió ya pasada, se graba su apertura, que cierra peor que
+   el stop → **peor que −1R**, y así se publica. Vale en los dos sentidos: a favor da más
+   que el objetivo, y también se publica tal cual.
 3. **La R flotante se acota a ≥ −1**; la realizada **no se acota nunca**. Mientras la
    posición vive, el stop es la pérdida máxima asumida; una vez cerrada, la pérdida
    real es la que fue.
@@ -425,8 +465,8 @@ fecha de vencimiento (LIGA180, solo detalle de señal viva):
 ```
 R = (salida − entrada) / (entrada − stop)      (long; short con signos invertidos)
 ```
-- La R se calcula sobre el **precio REAL de salida**: un hueco de apertura que
-  salta el stop da **peor que −1R** y se muestra tal cual — no se recorta a −1R.
+- La R se calcula sobre el **precio REAL de salida**: el **nivel** tocado, salvo hueco
+  de apertura, que da **peor que −1R** y se muestra tal cual — no se recorta a −1R.
 - Con **niveles escalonados** (entrada 1-4 niveles), la entrada es la **media**
   de los niveles declarados (`entry` ya la guarda así); con TP1 y TP2, la señal
   cierra en el nivel que toque primero según las reglas del cierre — la R usa

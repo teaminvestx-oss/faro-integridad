@@ -191,7 +191,7 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
     if (!dia || dia >= limite) continue;       // el día en curso no se cierra
     anclables++;
     const { payload, huella } = await Sello.huellaDeJson(fila);
-    const ya = ancladas.get((campos.id && campos.id.valor) || ' ');
+    const ya = ancladas.get((campos.id && campos.id.valor) || '');
     if (ya) {
       if (ya.huella !== huella) {
         alteradas.push({ id: campos.id.valor, archivo: ya.archivo, anclada: ya.huella, ahora: huella });
@@ -308,6 +308,19 @@ if (process.argv[1] && process.argv[1].endsWith('sellar.mjs')) {
       console.log('\nINCIDENCIA · ' + alteradas.length + ' señal(es) selladas ya no coinciden con su huella publicada:');
       for (const a of alteradas) console.log(`  ${a.id} · anclada ${a.anclada.slice(0, 16)}… · ahora ${a.ahora.slice(0, 16)}… (${a.archivo})`);
     }
-    if (check && nuevos.length) process.exit(1);
+    /* LIGA-20 · `--check` sale 1 si algo NO CUADRA, y una señal sellada que ya no
+     * coincide con su huella publicada es lo que menos cuadra de todo lo que puede pasar
+     * aquí. Hasta hoy la condición era solo `nuevos.length`: el comando cantaba la
+     * INCIDENCIA por pantalla y salía CERO. Quien audita desde fuera —que es para quien
+     * existe `--check`, y así está anunciado cuatro líneas más arriba: «sale 1 si algo no
+     * cuadra»— lo encadena (`&& echo OK`, un `if` en un script, un cron) y se lleva un OK
+     * justo en el caso para el que se montó el sistema entero.
+     *
+     * En el workflow NO cambia nada, y es a propósito: el paso que comprueba el
+     * determinismo distingue los dos motivos por la salida, porque una incidencia no
+     * puede parar el trabajo ANTES de publicar —la cadena no puede tener huecos y el
+     * archivo del día tiene que salir con la incidencia escrita dentro—. Quien hace
+     * fallar el trabajo por una incidencia es el paso de DESPUÉS de publicar. */
+    if (check && (nuevos.length || alteradas.length)) process.exit(1);
   }).catch((e) => { console.error('no se pudo generar la cadena:', e.message); process.exit(1); });
 }
