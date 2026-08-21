@@ -1,0 +1,147 @@
+# FARO · integridad · 2026-08-20
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# Cubre las señales publicadas el 2026-08-20 (día UTC).
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+faro-sello-v1
+id=e001cada-ac5a-45d2-9607-7a60870e9966
+analista=investx
+simbolo=RDDT
+direccion=long
+tipo=market
+entrada=145.18
+zona_min=
+zona_max=
+stop=125
+objetivo1=198
+objetivo2=230
+publicada=2026-08-20T15:14:34.231+00:00
+metodologia=v2
+tesis_sha256=7e0c1b3b84c895b163fbec4746f37df4419c3cfbe41f36f913bad34322171b0d
+huella=0e097ccc333d08dd4efee3e94ec647c36045f72ef4e83677482db09c3b45871d
+
+faro-sello-v1
+id=5f1c778d-9042-4160-846c-6eecfa1a38cf
+analista=jayu
+simbolo=GOOGL
+direccion=short
+tipo=market
+entrada=344.72
+zona_min=
+zona_max=
+stop=359.54
+objetivo1=329.9
+objetivo2=315.08
+publicada=2026-08-20T05:55:31.552+00:00
+metodologia=v2
+tesis_sha256=d37f3bd9a34b628e96d86832edb65e26f995f90fbcce1fbc64e68edd9ae72543
+huella=1f9af8ebd81bd3c9207cb54b8cef4878b67d81e6f6e29ffd69cbec0262b3fecb
+
+faro-sello-v1
+id=6e7cd324-d5a5-4636-9369-1d491067bf68
+analista=jayu
+simbolo=XPTUSD
+direccion=long
+tipo=market
+entrada=1795.4
+zona_min=
+zona_max=
+stop=1755.67
+objetivo1=1855.93
+objetivo2=1906.06
+publicada=2026-08-20T05:52:55.24+00:00
+metodologia=v2
+tesis_sha256=cfcdb0c6cfe2a7d7a65de24b616159b2a3300fefb3ef2cab677c8ca8feb0e6d1
+huella=2da7796400b0158ead6c97efd0383d8edd43a2d5ca58f948aa4ea87426868a38
+
+faro-sello-v1
+id=d27f14b7-9277-4d97-9a4f-d9144b8ff9b3
+analista=jose_tradingeasy
+simbolo=EURUSD
+direccion=long
+tipo=zone
+entrada=
+zona_min=1.15741
+zona_max=1.15745
+stop=1.15685
+objetivo1=1.17104
+objetivo2=
+publicada=2026-08-20T14:36:14.197+00:00
+metodologia=v2
+tesis_sha256=9e091237baf63facf5457757fd33506ad965c3a9f8e5c2c9f32ac50c20d5de25
+huella=5d7a421660c2f5fa5d43ba8c5011af4ac9d98156d6a6485a23c42a9754b478e3
+
+faro-sello-v1
+id=0275538e-599c-491f-b4d1-572253caf1a7
+analista=jayu
+simbolo=NZDUSD
+direccion=long
+tipo=market
+entrada=0.5954
+zona_min=
+zona_max=
+stop=0.58
+objetivo1=0.61
+objetivo2=0.63
+publicada=2026-08-20T05:53:42.801+00:00
+metodologia=v2
+tesis_sha256=e662986dc735fe1ec6638507b9f8e0eeb3ed37682d221aa09d7299b306a15b4e
+huella=5f98a06326242d10cd37860e5bc38f0bade9a04bd742982688083919e3080ac8
+
+faro-sello-v1
+id=4176776c-d952-49ff-b5ac-e6cbdb0686a5
+analista=jayu
+simbolo=COPPER
+direccion=short
+tipo=market
+entrada=6.486
+zona_min=
+zona_max=
+stop=6.61
+objetivo1=6.37
+objetivo2=6.25
+publicada=2026-08-20T05:56:52.44+00:00
+metodologia=v2
+tesis_sha256=43dc8ad0b096fadd628eba2b9d33ecaf8271f7cbd83f90bad2925b7c8c5bcfe4
+huella=cb3a9c37642e7fe5abc16c1bfc84fe7a368c80e24b9b6b0ac958fb94e83251e9
+
+faro-sello-v1
+id=76e1f747-8f1b-430c-ae36-7e939efc9288
+analista=jose_tradingeasy
+simbolo=GBPUSD
+direccion=long
+tipo=zone
+entrada=
+zona_min=1.3526
+zona_max=1.35261
+stop=1.35207
+objetivo1=1.36595
+objetivo2=
+publicada=2026-08-20T17:16:13.922+00:00
+metodologia=v2
+tesis_sha256=533d13d974187861bf6498c3cb266442539346a5457a8a0a429586521bb25097
+huella=e1e06f4d9a21b66bb3d8f8c1e3d7ac502ffa430976f9f195c94460f7bd38f9e4
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-08-20
+#   anterior=dfbccb9093962cd94ee50d626aa396712be030e6259a76991dba4e344ea15702
+#   0e097ccc333d08dd4efee3e94ec647c36045f72ef4e83677482db09c3b45871d
+#   1f9af8ebd81bd3c9207cb54b8cef4878b67d81e6f6e29ffd69cbec0262b3fecb
+#   2da7796400b0158ead6c97efd0383d8edd43a2d5ca58f948aa4ea87426868a38
+#   5d7a421660c2f5fa5d43ba8c5011af4ac9d98156d6a6485a23c42a9754b478e3
+#   5f98a06326242d10cd37860e5bc38f0bade9a04bd742982688083919e3080ac8
+#   cb3a9c37642e7fe5abc16c1bfc84fe7a368c80e24b9b6b0ac958fb94e83251e9
+#   e1e06f4d9a21b66bb3d8f8c1e3d7ac502ffa430976f9f195c94460f7bd38f9e4
+digest=a751f176fa50554fb6fd42b1e40ecddb4e96b922dc8ce4f9645c730adbc383f1
+anterior=dfbccb9093962cd94ee50d626aa396712be030e6259a76991dba4e344ea15702
+senales=7
