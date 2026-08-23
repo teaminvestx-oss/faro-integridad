@@ -1,0 +1,93 @@
+# FARO · integridad · 2026-08-22
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# Cubre las señales publicadas el 2026-08-22 (día UTC).
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+faro-sello-v1
+id=0a18743d-df86-47f6-a067-737a787485ef
+analista=jayu
+simbolo=GS
+direccion=short
+tipo=market
+entrada=1039.28
+zona_min=
+zona_max=
+stop=1083.72
+objetivo1=994.83
+objetivo2=950.39
+publicada=2026-08-22T21:58:47.474+00:00
+metodologia=v2
+tesis_sha256=27372c840d3b7d815d0cf365adc6bbc702e62db6f6c208b4a5371386e47be04e
+huella=2b0801a21cd6bcba72e8b983de6dc868d9733c9f98ca4dcec121a075b3aa38a0
+
+faro-sello-v1
+id=aff1bd73-ff9f-428f-9718-cba5a71d9e42
+analista=jayu
+simbolo=WMT
+direccion=short
+tipo=market
+entrada=103.7
+zona_min=
+zona_max=
+stop=108.2
+objetivo1=99.2
+objetivo2=94.7
+publicada=2026-08-22T22:07:56.494+00:00
+metodologia=v2
+tesis_sha256=8d2e321d1b7198d8ba333e91f606b13e9c0704acd2b7c4a7a02b5aa5bebecdd3
+huella=558084decc878155e3edb75d3cef270c444bccea0845ae76d00609c56313a7b0
+
+faro-sello-v1
+id=ab897b00-9296-4718-9c77-be9ab18056e3
+analista=jayu
+simbolo=AAL
+direccion=short
+tipo=market
+entrada=13.82
+zona_min=
+zona_max=
+stop=14.68
+objetivo1=12.96
+objetivo2=12.11
+publicada=2026-08-22T21:59:46.408+00:00
+metodologia=v2
+tesis_sha256=12de3290c48f26f8cf986db977f9056fcf4120bc87363c90bda6abca6acd413c
+huella=609a2192215dedafbd8c4d4ed982609c6271a0c7885f843bbc38aede0f362b26
+
+faro-sello-v1
+id=79bc0e7d-6c5b-43fc-bf2d-165cb61d7f8d
+analista=jayu
+simbolo=HOOD
+direccion=long
+tipo=market
+entrada=108.13
+zona_min=
+zona_max=
+stop=98.95
+objetivo1=117.31
+objetivo2=126.49
+publicada=2026-08-22T21:58:33.267+00:00
+metodologia=v2
+tesis_sha256=a46c2f4e8a69f71683bcf1cbb3bf492112254bb8535aa1cc5d6d802be919750b
+huella=6cc8c28b714b76751c9b542ed9f906ac6b942a6b41148a7b618eb23bde02102f
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-08-22
+#   anterior=62704fedf03d7629ef352420e10eb8a5bb27d45c35e790f4b36146cb43538fda
+#   2b0801a21cd6bcba72e8b983de6dc868d9733c9f98ca4dcec121a075b3aa38a0
+#   558084decc878155e3edb75d3cef270c444bccea0845ae76d00609c56313a7b0
+#   609a2192215dedafbd8c4d4ed982609c6271a0c7885f843bbc38aede0f362b26
+#   6cc8c28b714b76751c9b542ed9f906ac6b942a6b41148a7b618eb23bde02102f
+digest=c38ee74693d6249db9c87f0b13c0c07f36e8395cad6e8452d54f601133c23123
+anterior=62704fedf03d7629ef352420e10eb8a5bb27d45c35e790f4b36146cb43538fda
+senales=4
