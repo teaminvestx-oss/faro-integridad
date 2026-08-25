@@ -1,0 +1,147 @@
+# FARO · integridad · 2026-08-24
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# Cubre las señales publicadas el 2026-08-24 (día UTC).
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+faro-sello-v1
+id=95fb614e-19ff-4c2c-8a18-c59fd0b016af
+analista=claudia
+simbolo=ADBE
+direccion=long
+tipo=market
+entrada=275.49
+zona_min=
+zona_max=
+stop=241
+objetivo1=400
+objetivo2=
+publicada=2026-08-24T17:05:08.825+00:00
+metodologia=v2
+tesis_sha256=4e0824d9e20df3e2024032da471134a43f8af759c42b142ce0099f88888be3bb
+huella=30e41fb0785a74cf812385639ecaa3255b6b0d7b2df2260e4cd959cc5986e115
+
+faro-sello-v1
+id=5e0b9559-a1c7-4ef7-94be-e4357a7f837d
+analista=jayu
+simbolo=ADA
+direccion=long
+tipo=market
+entrada=0.22035
+zona_min=
+zona_max=
+stop=0.21
+objetivo1=0.23
+objetivo2=0.25
+publicada=2026-08-24T06:14:56.152+00:00
+metodologia=v2
+tesis_sha256=2961d9f2e1d5bb7c7cca7c7a763116596b16c4c19fce8af349521531de3970f1
+huella=342bc928e340cbc7423e6dfb276beab15ef5bdf1a59eee5f0d3feb317e33ae3c
+
+faro-sello-v1
+id=ffd89365-6a9c-4ae8-b09d-932b9bcde7c5
+analista=claudia
+simbolo=INTC
+direccion=long
+tipo=market
+entrada=87.64
+zona_min=
+zona_max=
+stop=64.9
+objetivo1=120
+objetivo2=
+publicada=2026-08-24T17:11:11.899+00:00
+metodologia=v2
+tesis_sha256=87df717f52f6130aa01b3fcf182c398af45ef36a56be44f5a9f6a6f6678b5322
+huella=4b07987dd98a6caa0c2a58043a8f9a30253a5e8516a31d1cbc34dedf38e2ee06
+
+faro-sello-v1
+id=6a659122-f0ad-4ad1-9e67-6894c26bc47d
+analista=jayu
+simbolo=USDCAD
+direccion=short
+tipo=market
+entrada=1.3833
+zona_min=
+zona_max=
+stop=1.39
+objetivo1=1.36
+objetivo2=1.35
+publicada=2026-08-24T07:49:21.144+00:00
+metodologia=v2
+tesis_sha256=83e811693b3ac4ea042458303637285cdce1037572e4c8d0282b8b0c62d7df49
+huella=4c315af23db3f71efe8899f6a6117715625b6cb407cc12f21e859efb6250fc5b
+
+faro-sello-v1
+id=36a01c25-edad-404d-aec5-b8c58318e27a
+analista=jayu
+simbolo=TSM
+direccion=short
+tipo=market
+entrada=409.6
+zona_min=
+zona_max=
+stop=429.84
+objetivo1=389.7
+objetivo2=369.63
+publicada=2026-08-24T13:35:04.053+00:00
+metodologia=v2
+tesis_sha256=2be70ae2e140497597cce67d5ae1231bf92b692a6c1e60904850d59f7c6ba822
+huella=b943c82915c4f1e861023c95a728e7d65bb808c3e968b03e23b26ab88a5b9b01
+
+faro-sello-v1
+id=3c7e6199-98f8-4eab-80d9-246923ac7b94
+analista=jose_tradingeasy
+simbolo=USDCAD
+direccion=short
+tipo=zone
+entrada=1.38447
+zona_min=1.38447
+zona_max=1.38448
+stop=1.38584
+objetivo1=1.37319
+objetivo2=
+publicada=2026-08-24T08:57:37.237+00:00
+metodologia=v2
+tesis_sha256=6a7c235a2a1119c6525351b80deb81d7cbfc3c609f5709d27d40f587129276fb
+huella=c36524688d1c0d2d793988c1e7990c88aca0544609c9b373b65c231fedfc1787
+
+faro-sello-v1
+id=3463104d-2a6e-45b1-a4e2-3bc47daebb27
+analista=jayu
+simbolo=STX
+direccion=short
+tipo=market
+entrada=811.95
+zona_min=
+zona_max=
+stop=913.5
+objetivo1=710.31
+objetivo2=608.72
+publicada=2026-08-24T13:35:42.398+00:00
+metodologia=v2
+tesis_sha256=907368d61651fded35bf81d13fbdfc724727ef77d65504ee18b7110a3590adc6
+huella=d167562251319e201aa60c7f1826438cd7ff762d547416ea77d1219ef494e359
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-08-24
+#   anterior=f3ce39ba6ff8a26003db22f73cfcef391cf730cf571d7c83de4f8e882d41b504
+#   30e41fb0785a74cf812385639ecaa3255b6b0d7b2df2260e4cd959cc5986e115
+#   342bc928e340cbc7423e6dfb276beab15ef5bdf1a59eee5f0d3feb317e33ae3c
+#   4b07987dd98a6caa0c2a58043a8f9a30253a5e8516a31d1cbc34dedf38e2ee06
+#   4c315af23db3f71efe8899f6a6117715625b6cb407cc12f21e859efb6250fc5b
+#   b943c82915c4f1e861023c95a728e7d65bb808c3e968b03e23b26ab88a5b9b01
+#   c36524688d1c0d2d793988c1e7990c88aca0544609c9b373b65c231fedfc1787
+#   d167562251319e201aa60c7f1826438cd7ff762d547416ea77d1219ef494e359
+digest=3d55ccdce6a8c159cf8d5e0e5a11f9f6e80b9c4f3c6fb5ad8077fc45ba0e352f
+anterior=f3ce39ba6ff8a26003db22f73cfcef391cf730cf571d7c83de4f8e882d41b504
+senales=7
