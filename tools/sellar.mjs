@@ -156,6 +156,28 @@ function defectoAnclajePrematuro(anclado, ahora) {
   return cambio;                                   // null si no cambió nada
 }
 
+/**
+ * LIGA394 · Qué líneas del payload han cambiado, para que la incidencia sea un HECHO y no
+ * una acusación. Devuelve [{campo, antes, ahora}], solo de las líneas que difieren.
+ *
+ * NO relaja nada: `defectoAnclajePrematuro` sigue admitiendo EXACTAMENTE la forma
+ * «entrada vacía → entrada rellena» y ninguna otra. Ampliarlo a «valor → valor» sería
+ * excusar justo el cambio que este sistema existe para detectar: si alguien reescribe la
+ * entrada de una señal cerrada, el retorno cambia entero. Esto no decide nada — solo
+ * cuenta lo que pasó, para que quien decida lo haga mirando el dato.
+ */
+function diffPayload(anclado, ahora) {
+  if (!anclado || !ahora) return [];
+  const a = anclado.trimEnd().split('\n'), b = ahora.trimEnd().split('\n');
+  const out = [];
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (a[i] === b[i]) continue;
+    const campo = String(a[i] ?? b[i] ?? '').split('=')[0];
+    out.push({ campo, antes: (a[i] ?? '(no estaba)'), ahora: (b[i] ?? '(ya no está)') });
+  }
+  return out;
+}
+
 /** El índice de la cadena: una línea por digest, `fecha digest n [inicial]`. */
 function leeIndice(indice = INDICE) {
   if (!existsSync(indice)) return [];
@@ -165,7 +187,7 @@ function leeIndice(indice = INDICE) {
 }
 
 /** El archivo de un día: cabecera legible, un bloque por señal, y el digest al final. */
-function archivoDia({ fecha, anterior, bloques, textoCadena, digest, inicial, incorporado, tardias = 0, alteradas = [], prematuras = [] }) {
+function archivoDia({ fecha, anterior, bloques, textoCadena, digest, inicial, incorporado, tardias = 0, alteradas = [], prematuras = [], desaparecidas = [] }) {
   const cab = [
     '# FARO · integridad · ' + fecha,
     '#',
@@ -197,9 +219,30 @@ function archivoDia({ fecha, anterior, bloques, textoCadena, digest, inicial, in
       ...alteradas.flatMap((a) => ['#',
         '#   señal    ' + a.id,
         '#   anclada  ' + a.anclada + '  (en ' + a.archivo + ')',
-        '#   ahora    ' + a.ahora]),
+        '#   ahora    ' + a.ahora,
+        // LIGA394 · QUÉ cambió, línea a línea. Sin esto la incidencia solo dice que algo
+        // no cuadra, y quien la lea —dentro o fuera— tiene que reconstruirlo a mano.
+        ...(a.lineas || []).flatMap((l) => [
+          '#     ' + l.campo + ':',
+          '#       antes  ' + l.antes,
+          '#       ahora  ' + l.ahora])]),
       '#',
       '# La huella anclada NO se toca: sigue siendo la prueba de lo que se publicó.',
+      '# ══════════════════════════════════════════════════════════════════════════'] : []),
+    // LIGA394 · Bajo el MISMO rótulo de incidencia, y a propósito: una señal sellada que
+    // deja de ser pública es tan grave como una que cambia. Es la salida cómoda a una
+    // incidencia —retirarla en vez de explicarla— y hasta hoy la cadena no decía nada.
+    ...(desaparecidas.length ? ['#',
+      '# ══════════════════════════════════════════════════════════════════════════',
+      '# ⚠ INCIDENCIA DE INTEGRIDAD · ' + desaparecidas.length + ' señal(es) ya selladas han',
+      '# DEJADO DE SER PÚBLICAS. Su huella sigue anclada y es válida, pero la fuente ya no',
+      '# las devuelve, así que nadie puede recalcularla: han salido de la vigilancia.',
+      '# Causas posibles: is_demo, validated o is_draft. Ninguna es rutina en una señal',
+      '# que ya estaba sellada, y por eso se dice aquí en vez de callarlo.',
+      ...desaparecidas.flatMap((d) => ['#',
+        '#   señal    ' + d.id,
+        '#   anclada  ' + d.huella + '  (en ' + d.archivo + ')']),
+      '#',
       '# ══════════════════════════════════════════════════════════════════════════'] : []),
     // LIGA-114 · el defecto conocido, dicho entero y por separado. Va en su propia sección
     // y NO bajo el rótulo de incidencia porque no es lo mismo, y mezclarlos haría dos daños
@@ -260,6 +303,17 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
    *   · las del día en curso se dejan para mañana, porque el día no ha cerrado. */
   const conHuella = [];
   const alteradas = [];
+  /* LIGA394 · LAS QUE SE FUERON DE LA VIGILANCIA SIN QUE NADIE LO DIJERA.
+   * Esta pasada recorre lo que devuelve la API PÚBLICA. Una señal ya anclada que deje de
+   * ser pública —`is_demo` a true, `validated` a false, `is_draft` a true— desaparece de
+   * `filas`, así que no se recomprueba nunca más: la cadena se pone verde y no dice nada.
+   * Es el agujero de LIGA-110c y LIGA-114 un nivel más afuera, y su propia frase lo
+   * describe: «lo que sale de la vigilancia sin que nadie lo anuncie es exactamente lo que
+   * este sistema promete que no existe».
+   * Importa porque abre la salida más cómoda que hay a una incidencia: en vez de explicar
+   * por qué una señal sellada cambió, se la retira de lo público y el registro deja de
+   * preguntarlo. Se anota qué ids se han visto y al final se dice cuáles faltan. */
+  const vistas = new Set();
   const prematuras = [];   // LIGA-114 · el defecto conocido, separado de una manipulación
   let anclables = 0;
   for (const fila of filas) {
@@ -295,6 +349,7 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
       ? (campos.status?.valor || '') !== 'pending'   // sin columna: la regla de LIGA-109
       : fin === 'true';
     const { payload, huella } = await Sello.huellaDeJson(fila);
+    if (campos.id && campos.id.valor) vistas.add(campos.id.valor);   // LIGA394
     const ya = ancladas.get((campos.id && campos.id.valor) || '');
     /* LIGA-114 · LA RECOMPROBACIÓN VA ANTES QUE LA REGLA DE ANCLAJE, y el orden es el
      * arreglo. Con `if (!definitiva) continue;` delante, las 14 pendientes que el generador
@@ -313,7 +368,16 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
           prematuras.push({ id: campos.id.valor, archivo: ya.archivo, anclada: ya.huella,
             ahora: huella, entrada: entradaNueva, estado: campos.status?.valor || '' });
         } else {
-          alteradas.push({ id: campos.id.valor, archivo: ya.archivo, anclada: ya.huella, ahora: huella });
+          /* LIGA394 · SE GUARDA QUÉ LÍNEAS CAMBIARON, no solo que la huella no cuadra.
+           * El payload anclado ya estaba aquí desde LIGA-114 —y su comentario dice para
+           * qué: «con el payload se puede EXPLICAR qué línea cambió, que es lo que separa
+           * una acusación de un hecho»—, pero en esta rama se tiraba. Resultado: el 27-ago
+           * la cadena publicó «una señal sellada ya no coincide, investígalo AHORA» con dos
+           * huellas y nada más, y averiguar que era una activación normal de una señal de
+           * zona costó reconstruir el ciclo de vida a mano desde `signal_events`.
+           * Una incidencia que no dice QUÉ cambió obliga a esa investigación cada vez. */
+          alteradas.push({ id: campos.id.valor, archivo: ya.archivo, anclada: ya.huella, ahora: huella,
+            lineas: diffPayload(ya.payload, payload) });
         }
       }
       continue;                                // ya está en la cadena: no se ancla dos veces
@@ -354,6 +418,13 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
     }
   }
 
+  /* LIGA394 · las ancladas que ya no devuelve la consulta pública. Ver el comentario de
+   * `vistas`. Se reporta con su archivo, que es lo que permite ir a mirar su payload
+   * sellado sin buscarlo. */
+  const desaparecidas = [...ancladas.entries()]
+    .filter(([id]) => !vistas.has(id))
+    .map(([id, a]) => ({ id, archivo: a.archivo, huella: a.huella }));
+
   const dias = [...porDia.keys()].sort();
   let anterior = indice.length ? indice[indice.length - 1].digest : '';
   const nuevos = [];
@@ -367,6 +438,7 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
       // La incidencia se escribe en el archivo del día que se cierra, no en todos.
       alteradas: fecha === cierre ? alteradas : [],
       prematuras: fecha === cierre ? prematuras : [],
+      desaparecidas: fecha === cierre ? desaparecidas : [],
     });
     anterior = digest;
   }
@@ -413,12 +485,12 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
       writeFileSync(ruta, buscador);
     }
   }
-  return { nuevos, total: anclables, primeraVez, alteradas, prematuras };
+  return { nuevos, total: anclables, primeraVez, alteradas, prematuras, desaparecidas };
 }
 
 if (process.argv[1] && process.argv[1].endsWith('sellar.mjs')) {
   const check = process.argv.includes('--check');
-  genera({ escribir: !check }).then(({ nuevos, total, primeraVez, alteradas, prematuras }) => {
+  genera({ escribir: !check }).then(({ nuevos, total, primeraVez, alteradas, prematuras, desaparecidas }) => {
     for (const d of nuevos) {
       console.log(`${check ? 'faltaría' : 'escrito '} integridad/${d.fecha}.txt · ${d.bloques.length} señales · digest ${d.digest.slice(0, 16)}…${d.inicial ? ' (BLOQUE INICIAL)' : ''}${d.tardias ? ` · ${d.tardias} tardía(s)` : ''}`);
     }
@@ -435,7 +507,12 @@ if (process.argv[1] && process.argv[1].endsWith('sellar.mjs')) {
     }
     if (alteradas.length) {
       console.log('\nINCIDENCIA · ' + alteradas.length + ' señal(es) selladas ya no coinciden con su huella publicada:');
-      for (const a of alteradas) console.log(`  ${a.id} · anclada ${a.anclada.slice(0, 16)}… · ahora ${a.ahora.slice(0, 16)}… (${a.archivo})`);
+      for (const a of alteradas) {
+        console.log(`  ${a.id} · anclada ${a.anclada.slice(0, 16)}… · ahora ${a.ahora.slice(0, 16)}… (${a.archivo})`);
+        // LIGA394 · el QUÉ, aquí también: `--check` es lo que ejecuta quien audita desde
+        // fuera, y mandarle dos huellas sin decirle qué línea se movió es mandarlo a ciegas.
+        for (const l of a.lineas || []) console.log(`      ${l.campo}: «${l.antes}» → «${l.ahora}»`);
+      }
     }
     /* LIGA-20 · `--check` sale 1 si algo NO CUADRA, y una señal sellada que ya no
      * coincide con su huella publicada es lo que menos cuadra de todo lo que puede pasar
@@ -450,6 +527,15 @@ if (process.argv[1] && process.argv[1].endsWith('sellar.mjs')) {
      * puede parar el trabajo ANTES de publicar —la cadena no puede tener huecos y el
      * archivo del día tiene que salir con la incidencia escrita dentro—. Quien hace
      * fallar el trabajo por una incidencia es el paso de DESPUÉS de publicar. */
-    if (check && (nuevos.length || alteradas.length)) process.exit(1);
+    /* LIGA394 · y la MISMA línea para las desaparecidas, por el mismo motivo que LIGA-20
+     * la escribió para las alteradas: `--check` existe para quien audita desde fuera y lo
+     * encadena con `&& echo OK`. Una señal sellada que ha salido de lo público es
+     * exactamente el caso en el que ese OK no puede salir. */
+    if (desaparecidas?.length) {
+      console.log('\nINCIDENCIA · ' + desaparecidas.length + ' señal(es) selladas han DEJADO DE SER PÚBLICAS '
+        + '(is_demo, validated o is_draft): su huella ya no se puede recalcular desde la fuente.');
+      for (const d of desaparecidas) console.log(`  ${d.id} · anclada ${d.huella.slice(0, 16)}… (${d.archivo})`);
+    }
+    if (check && (nuevos.length || alteradas.length || desaparecidas?.length)) process.exit(1);
   }).catch((e) => { console.error('no se pudo generar la cadena:', e.message); process.exit(1); });
 }
