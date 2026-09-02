@@ -26,14 +26,7 @@ integridad/
 tools/sellar.mjs      el generador, para que lo ejecutes tú (ver «La auditoría completa»)
 js/sello.js           la canonicalización: las reglas del formato, en código y comentadas
 docs/metricas.md      las fórmulas de las métricas que publica la web
-NOTAS.md              los fallos que hemos cometido y que afectan a lo que hay aquí
 ```
-
-**Sobre [`NOTAS.md`](NOTAS.md):** cuando algo sale mal por nuestra parte y toca a este
-registro, lo contamos ahí, con número y fecha. Ninguna nota corrige la cadena —**ninguna
-señal se retira, se edita ni se recalcula**— y ese fichero tampoco se reescribe: una nota
-que necesite corrección se corrige con **otra nota**. Sería absurdo que el único fichero
-mutable de este repositorio fuese justo el que cuenta los fallos.
 
 **Sobre `indice.txt`, para que nadie lo malinterprete:** es un *puntero*, no una prueba.
 Existe para que encuentres en qué archivo cayó una señal sin tener que abrirlos todos, y
