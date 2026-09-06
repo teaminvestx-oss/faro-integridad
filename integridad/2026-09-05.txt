@@ -1,0 +1,166 @@
+# FARO · integridad · 2026-09-05
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# Cubre las señales publicadas el 2026-09-05 (día UTC).
+#
+# Incluye 1 señal(es) publicadas ANTES de esta fecha que se hicieron
+# públicas después de que su día quedara cerrado. Se anclan aquí porque la
+# alternativa es que no se anclen nunca; su fecha real de publicación está en el
+# campo «publicada» de su payload, sin retocar.
+#
+# ──────────────────────────────────────────────────────────────────────────
+# NOTA · 3 señal(es) ancladas ANTES DE TIEMPO por un defecto
+# de este generador, ya corregido. Entre el 12 y el 25 de agosto de 2026 se anclaron
+# señales PENDIENTES: señales cuya entrada no la fija el analista al publicar sino el
+# mercado al llegar a su precio, días después. Se anclaron con «entrada=» vacía, que
+# era la verdad de ese momento, y al activarse esa línea se ha rellenado.
+#
+# Su huella ya no coincide, y eso NO es una manipulación: es el único cambio que la
+# activación produce. Se puede comprobar sin creernos nada — el payload anclado está
+# en el archivo que se cita, y la única línea distinta es «entrada=». Si cambiara
+# cualquier otra cosa, o si «entrada» pasara de un precio a otro precio, esto
+# aparecería arriba como INCIDENCIA y no aquí; la comprobación la hace el código que
+# publicamos, no una decisión de quien genera el archivo.
+#
+#   señal    d27f14b7-9277-4d97-9a4f-d9144b8ff9b3  (open)
+#   anclada  5d7a421660c2f5fa5d43ba8c5011af4ac9d98156d6a6485a23c42a9754b478e3  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    b1a8ed6cd1abfd41dfaba1cdf9b0d487c0a65b345508fe96ec90fb98446f7afe  (entrada=1.15745)
+#
+#   señal    76e1f747-8f1b-430c-ae36-7e939efc9288  (hit_sl)
+#   anclada  e1e06f4d9a21b66bb3d8f8c1e3d7ac502ffa430976f9f195c94460f7bd38f9e4  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    2668a54a06555740cb33efcde73858a8a3f1d85e3dfd0e9539a11d5b1aee0a27  (entrada=1.3526)
+#
+#   señal    99427213-efef-4f52-b79e-36233da3bab2  (hit_sl)
+#   anclada  dc0574ef1d7c6269aaf501af81b2a0ed99dd9234da07759545b271d86d776c55  (en 2026-08-25.txt, con entrada vacía)
+#   ahora    9e4fc7a9a5aad48e102ffc1c88635e68ca05cd9fdfbf58ed646ae1bfb78dc568  (entrada=0.5942476391792297)
+#
+# No se re-ancla ni se corrige lo publicado: la cadena es inmutable a propósito, y
+# tapar un error propio reescribiendo el registro sería peor que el error.
+# Desde la corrección, una señal solo entra en la cadena cuando su contenido sellado
+# ya no puede cambiar, así que esta lista solo puede menguar.
+# ──────────────────────────────────────────────────────────────────────────
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+faro-sello-v1
+id=f4c83d5b-2ac9-4dd5-ad36-60dfe0591cfd
+analista=bandito03
+simbolo=EURUSD
+direccion=short
+tipo=levels
+entrada=1.161
+zona_min=1.1607
+zona_max=1.161
+stop=1.1618
+objetivo1=1.1585
+objetivo2=1.154
+publicada=2026-09-04T13:37:28.672+00:00
+metodologia=v2
+tesis_sha256=daf68e6403b158162c0a3a49f378117b68b6ff9559c3fe5a8e814ac9348db6e1
+huella=157cf83f18393f33d60f82a57fea3509087d02fe58372bfe2f811fa4a51f2db3
+
+faro-sello-v1
+id=7542d772-4daa-4c46-98b2-3bb62bae0482
+analista=jayu-a1
+simbolo=BRENT
+direccion=long
+tipo=market
+entrada=96.28
+zona_min=
+zona_max=
+stop=90.75
+objetivo1=101.81
+objetivo2=107.35
+publicada=2026-09-05T17:39:14.663+00:00
+metodologia=v2
+tesis_sha256=
+huella=20fbdb93c66eed0add83a4c64f5ee43353d2d6a60dca72a6006886d4fb44750b
+
+faro-sello-v1
+id=6a322191-2bb6-471e-9d19-bb9eb7a5f472
+analista=jayu-a1
+simbolo=USDJPY
+direccion=short
+tipo=market
+entrada=156.221
+zona_min=
+zona_max=
+stop=158.41
+objetivo1=154.03
+objetivo2=151.83
+publicada=2026-09-05T17:35:49.022+00:00
+metodologia=v2
+tesis_sha256=
+huella=27e50c7926fd817f2e6db5b23b25f73974688d96f27e6da00568969d2edb8f45
+
+faro-sello-v1
+id=fd5f5e6c-2dd9-4c4d-8e01-c31f5c7b1f4d
+analista=jayu-a1
+simbolo=EURGBP
+direccion=long
+tipo=market
+entrada=0.8587
+zona_min=
+zona_max=
+stop=0.85657
+objetivo1=0.86343
+objetivo2=0.86685
+publicada=2026-09-05T17:39:06.951+00:00
+metodologia=v2
+tesis_sha256=
+huella=35219691637bff6bbe3b1783cf9904ee74734a8b3a196fae27fe3df64526e3be
+
+faro-sello-v1
+id=45a2b251-3f82-4227-b062-97d0054c1a66
+analista=jayu-a1
+simbolo=ADA
+direccion=long
+tipo=market
+entrada=0.21924
+zona_min=
+zona_max=
+stop=0.2009
+objetivo1=0.2391
+objetivo2=0.2582
+publicada=2026-09-05T17:49:35.663+00:00
+metodologia=v2
+tesis_sha256=
+huella=696a5dda4c35e7f29642c964fd79d71d8be5b5e66f4796899cba16cd53f661d5
+
+faro-sello-v1
+id=65732005-229e-4568-95c1-15e87765d6a5
+analista=jayu-a1
+simbolo=WTI
+direccion=long
+tipo=market
+entrada=91.48
+zona_min=
+zona_max=
+stop=86.08
+objetivo1=96.88
+objetivo2=102.29
+publicada=2026-09-05T17:39:12.358+00:00
+metodologia=v2
+tesis_sha256=
+huella=f4f747b0e272605f074b0fce95120b72e3a85d1c6406ba548b1f4ddfdc16db2b
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-09-05
+#   anterior=f353f438d40b17616b3a7d5197a44d715886524ef2ce5f953dd31d88cf195e4f
+#   157cf83f18393f33d60f82a57fea3509087d02fe58372bfe2f811fa4a51f2db3
+#   20fbdb93c66eed0add83a4c64f5ee43353d2d6a60dca72a6006886d4fb44750b
+#   27e50c7926fd817f2e6db5b23b25f73974688d96f27e6da00568969d2edb8f45
+#   35219691637bff6bbe3b1783cf9904ee74734a8b3a196fae27fe3df64526e3be
+#   696a5dda4c35e7f29642c964fd79d71d8be5b5e66f4796899cba16cd53f661d5
+#   f4f747b0e272605f074b0fce95120b72e3a85d1c6406ba548b1f4ddfdc16db2b
+digest=6116a6c3b69573e9528f6ccdec43b3e9fabda8ee62a9a73a35f65a1f507954ac
+anterior=f353f438d40b17616b3a7d5197a44d715886524ef2ce5f953dd31d88cf195e4f
+senales=6
