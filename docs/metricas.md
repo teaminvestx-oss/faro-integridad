@@ -309,7 +309,7 @@ banda, la señal se activa aunque el precio ya se haya ido. La entrada estampada
 sigue siendo un precio negociado de verdad: el **borde de la banda cruzado**
 (donde ejecutaría una limitada puesta en la zona; long entra por `zone_high`,
 short por `zone_low`) o el **cierre de la vela** si quedó entera dentro. El
-evento `activated` lleva `via: "vela_15m"` y la vela usada — auditable. Una
+evento `activated` lleva `via: `vela_<resolución>`` con la resolución real de la vela que activó (LIGA461: era `"vela_15m"` fijo, y desde LIGA186 la escalera empieza en 1 min) y la vela usada — auditable. Una
 zona expirada jamás se reactiva.
 
 ### A qué precio cierra una señal (LIGA-33)
