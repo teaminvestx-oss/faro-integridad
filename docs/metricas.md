@@ -583,7 +583,12 @@ formato español de arriba porque viaja fuera del producto.
 
 ## Fuente y frecuencia de los precios
 - `signals.current_price` lo escribe la Edge Function `update-prices`
-  (Yahoo Finance con respaldo Stooq), cada 5 min, todos los días (LIGA158;
+  **No hay una sola fuente**: cada clase de activo se mide con el proveedor que
+  tiene licencia para ella (grado A: divisas, metales, cripto, futuros, acciones
+  y ETF de EEUU → Twelve Data; grado B: índices y acciones europeas → Yahoo
+  Finance, sin licencia y declarado en la ficha; grado C: sin medición). La
+  cobertura intradía de acciones de EEUU NO se ha sondeado todavía (LIGA579).
+  Frecuencia: continua y todos los días del año (LIGA158;
   antes: cuartohorario y solo 8–23 UTC L–V — cripto en finde y forex nocturno
   quedaban sin sondear, contra lo que promete la metodología).
 - La misma función cierra señales al tocar TP/SL y sella `price_updated_at`.
