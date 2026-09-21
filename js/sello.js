@@ -29,6 +29,30 @@
  * de escritura: lee la API pública igual que la leería un tercero, lo que significa que
  * un tercero puede ejecutar exactamente el mismo proceso y obtener exactamente el mismo
  * archivo. Eso es lo que convierte la promesa en algo comprobable.
+ *
+ * ── Y EL CASO DONDE ESO NO SE PUEDE CUMPLIR, DICHO AQUÍ Y NO EN UNA NOTA ───
+ * Con la PUBLICACIÓN DIFERIDA hay señales cuyos parámetros no son públicos mientras la
+ * operación vive. Para ellas lo de arriba es imposible por construcción: nadie de fuera
+ * puede calcular su huella todavía, porque le faltan los datos. FARO la COMPROMETE al
+ * publicar —y esa huella se ancla en la ventana normal de la cadena, no antes— y se
+ * RECALCULA al revelarse.
+ *
+ * OJO CON ESA VENTANA, que es donde esta cabecera ya se pasó una vez: decía «la ancla ese
+ * mismo día», y la cadena NO hace eso. Ancla días UTC COMPLETOS a la mañana siguiente, así
+ * que en el peor caso pasan unas 27 horas — lo dice esta misma herramienta y lo dice la
+ * página. Prometer el anclaje antes de que exista es prometer la prueba externa justo en la
+ * franja en la que todavía no la hay, que es la única franja donde importa.
+ *
+ * O sea que la frase «la huella no se guarda nunca» deja de ser cierta en absoluto: hay
+ * exactamente una huella persistida por señal diferida, y solo durante su ventana. Es el
+ * único punto donde este diseño cede, y cede a cambio de algo: al revelarse, esa huella
+ * demuestra MÁS que la de una señal en abierto — que el compromiso existía antes de que
+ * el mercado se moviera.
+ *
+ * Esto se escribe aquí porque este comentario es el argumento original que había que leer
+ * antes de ceder. Dejarlo prometiendo el absoluto mientras el sistema ya no lo cumple
+ * sería la peor versión del fallo: la frase se vuelve falsa, suena a fundamento, y nada
+ * avisa.
  */
 (function (raiz) {
   'use strict';
