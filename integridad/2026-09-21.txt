@@ -1,0 +1,89 @@
+# FARO · integridad · 2026-09-21
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# Cubre las señales publicadas el 2026-09-21 (día UTC).
+#
+# ──────────────────────────────────────────────────────────────────────────
+# NOTA · 3 señal(es) ancladas ANTES DE TIEMPO por un defecto
+# de este generador, ya corregido. Entre el 12 y el 25 de agosto de 2026 se anclaron
+# señales PENDIENTES: señales cuya entrada no la fija el analista al publicar sino el
+# mercado al llegar a su precio, días después. Se anclaron con «entrada=» vacía, que
+# era la verdad de ese momento, y al activarse esa línea se ha rellenado.
+#
+# Su huella ya no coincide, y eso NO es una manipulación: es el único cambio que la
+# activación produce. Se puede comprobar sin creernos nada — el payload anclado está
+# en el archivo que se cita, y la única línea distinta es «entrada=». Si cambiara
+# cualquier otra cosa, o si «entrada» pasara de un precio a otro precio, esto
+# aparecería arriba como INCIDENCIA y no aquí; la comprobación la hace el código que
+# publicamos, no una decisión de quien genera el archivo.
+#
+#   señal    d27f14b7-9277-4d97-9a4f-d9144b8ff9b3  (hit_sl)
+#   anclada  5d7a421660c2f5fa5d43ba8c5011af4ac9d98156d6a6485a23c42a9754b478e3  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    b1a8ed6cd1abfd41dfaba1cdf9b0d487c0a65b345508fe96ec90fb98446f7afe  (entrada=1.15745)
+#
+#   señal    76e1f747-8f1b-430c-ae36-7e939efc9288  (hit_sl)
+#   anclada  e1e06f4d9a21b66bb3d8f8c1e3d7ac502ffa430976f9f195c94460f7bd38f9e4  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    2668a54a06555740cb33efcde73858a8a3f1d85e3dfd0e9539a11d5b1aee0a27  (entrada=1.3526)
+#
+#   señal    99427213-efef-4f52-b79e-36233da3bab2  (hit_sl)
+#   anclada  dc0574ef1d7c6269aaf501af81b2a0ed99dd9234da07759545b271d86d776c55  (en 2026-08-25.txt, con entrada vacía)
+#   ahora    9e4fc7a9a5aad48e102ffc1c88635e68ca05cd9fdfbf58ed646ae1bfb78dc568  (entrada=0.5942476391792297)
+#
+# No se re-ancla ni se corrige lo publicado: la cadena es inmutable a propósito, y
+# tapar un error propio reescribiendo el registro sería peor que el error.
+# Desde la corrección, una señal solo entra en la cadena cuando su contenido sellado
+# ya no puede cambiar, así que esta lista solo puede menguar.
+# ──────────────────────────────────────────────────────────────────────────
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+faro-sello-v1
+id=a28e27b7-5b44-41b3-a9a7-271db9214183
+analista=josesanz2312
+simbolo=META
+direccion=long
+tipo=market
+entrada=744.85
+zona_min=
+zona_max=
+stop=628
+objetivo1=1090
+objetivo2=
+publicada=2026-09-21T18:54:03.231+00:00
+metodologia=v2
+tesis_sha256=964cbe13210ef736ffdb8aec38a04f74fe4d98930c5242830abd55bf268507b5
+huella=da2f56a6778f3de4bf810b2aa8cc4b177102dacb8927aa83c73b3ce3d19ff5fe
+
+faro-sello-v1
+id=7478a8ce-64a1-4eae-9150-2ca1ca5a7f3d
+analista=josesanz2312
+simbolo=SOL
+direccion=long
+tipo=market
+entrada=118.5
+zona_min=
+zona_max=
+stop=107
+objetivo1=145
+objetivo2=
+publicada=2026-09-21T14:29:55.661+00:00
+metodologia=v2
+tesis_sha256=4e7c37bee65e73e283fd9b41cbd434a148ff0957cbc0c0209003b9b0c1360507
+huella=e599a7259f0c0162d061cb474a1eadc5fa7bad788b7ba992bb0abb8f44ab294e
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-09-21
+#   anterior=9d1fd716f3f8411052729a22719d40b5175428298a716d20ef194c7f7763f044
+#   da2f56a6778f3de4bf810b2aa8cc4b177102dacb8927aa83c73b3ce3d19ff5fe
+#   e599a7259f0c0162d061cb474a1eadc5fa7bad788b7ba992bb0abb8f44ab294e
+digest=caa23232f9c487e43e243a95de9db968884a56cb8be5f90df409244db3fd522c
+anterior=9d1fd716f3f8411052729a22719d40b5175428298a716d20ef194c7f7763f044
+senales=2
