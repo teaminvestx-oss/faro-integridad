@@ -1,0 +1,107 @@
+# FARO · integridad · 2026-09-22
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# Cubre las señales publicadas el 2026-09-22 (día UTC).
+#
+# ──────────────────────────────────────────────────────────────────────────
+# NOTA · 3 señal(es) ancladas ANTES DE TIEMPO por un defecto
+# de este generador, ya corregido. Entre el 12 y el 25 de agosto de 2026 se anclaron
+# señales PENDIENTES: señales cuya entrada no la fija el analista al publicar sino el
+# mercado al llegar a su precio, días después. Se anclaron con «entrada=» vacía, que
+# era la verdad de ese momento, y al activarse esa línea se ha rellenado.
+#
+# Su huella ya no coincide, y eso NO es una manipulación: es el único cambio que la
+# activación produce. Se puede comprobar sin creernos nada — el payload anclado está
+# en el archivo que se cita, y la única línea distinta es «entrada=». Si cambiara
+# cualquier otra cosa, o si «entrada» pasara de un precio a otro precio, esto
+# aparecería arriba como INCIDENCIA y no aquí; la comprobación la hace el código que
+# publicamos, no una decisión de quien genera el archivo.
+#
+#   señal    d27f14b7-9277-4d97-9a4f-d9144b8ff9b3  (hit_sl)
+#   anclada  5d7a421660c2f5fa5d43ba8c5011af4ac9d98156d6a6485a23c42a9754b478e3  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    b1a8ed6cd1abfd41dfaba1cdf9b0d487c0a65b345508fe96ec90fb98446f7afe  (entrada=1.15745)
+#
+#   señal    76e1f747-8f1b-430c-ae36-7e939efc9288  (hit_sl)
+#   anclada  e1e06f4d9a21b66bb3d8f8c1e3d7ac502ffa430976f9f195c94460f7bd38f9e4  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    2668a54a06555740cb33efcde73858a8a3f1d85e3dfd0e9539a11d5b1aee0a27  (entrada=1.3526)
+#
+#   señal    99427213-efef-4f52-b79e-36233da3bab2  (hit_sl)
+#   anclada  dc0574ef1d7c6269aaf501af81b2a0ed99dd9234da07759545b271d86d776c55  (en 2026-08-25.txt, con entrada vacía)
+#   ahora    9e4fc7a9a5aad48e102ffc1c88635e68ca05cd9fdfbf58ed646ae1bfb78dc568  (entrada=0.5942476391792297)
+#
+# No se re-ancla ni se corrige lo publicado: la cadena es inmutable a propósito, y
+# tapar un error propio reescribiendo el registro sería peor que el error.
+# Desde la corrección, una señal solo entra en la cadena cuando su contenido sellado
+# ya no puede cambiar, así que esta lista solo puede menguar.
+# ──────────────────────────────────────────────────────────────────────────
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+faro-sello-v1
+id=2b66d86f-3488-4866-aa5e-bf36ad7ebb38
+analista=claudia
+simbolo=XAUUSD
+direccion=short
+tipo=levels
+entrada=4360.3
+zona_min=4360.3
+zona_max=4360.3
+stop=4377
+objetivo1=4330
+objetivo2=4320
+publicada=2026-09-22T06:12:18.288+00:00
+metodologia=v2
+tesis_sha256=b409f273e3ae7f6f2ab4b9e788c5eb2c2d69a3568289b16110fbee54bd940bdc
+huella=04ee524e8fdbd5c02d2d19e6ecd8e7dd89afa2e483f00456465ab5c6fc28915c
+
+faro-sello-v1
+id=717459c9-f7da-41fc-b6c7-7401a8e5d754
+analista=dleyton06
+simbolo=XAUUSD
+direccion=long
+tipo=market
+entrada=4323.515
+zona_min=
+zona_max=
+stop=4290
+objetivo1=4440
+objetivo2=
+publicada=2026-09-22T12:06:52.265+00:00
+metodologia=v2
+tesis_sha256=5b91cb583d09968c45b2cffe6bfb9f6ac63f7c02e684e9e46e34bddfe0be9d5e
+huella=34b07b5b8bbfb16c75c04c546fa340725ed1162398f9ac46f861747b95a0c928
+
+faro-sello-v1
+id=ea55930b-d7b4-4f65-a818-6b718796dc26
+analista=pemar-a3
+simbolo=XAUUSD
+direccion=short
+tipo=market
+entrada=4325.565
+zona_min=
+zona_max=
+stop=4343.99
+objetivo1=4306.75
+objetivo2=
+publicada=2026-09-22T14:37:08.705+00:00
+metodologia=v2
+tesis_sha256=
+huella=ada17889c452900de0720c09baebca0f01452b03556fe1bea29c788617c94c9b
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-09-22
+#   anterior=caa23232f9c487e43e243a95de9db968884a56cb8be5f90df409244db3fd522c
+#   04ee524e8fdbd5c02d2d19e6ecd8e7dd89afa2e483f00456465ab5c6fc28915c
+#   34b07b5b8bbfb16c75c04c546fa340725ed1162398f9ac46f861747b95a0c928
+#   ada17889c452900de0720c09baebca0f01452b03556fe1bea29c788617c94c9b
+digest=7d249d061cc9807a34105bf5a0c6f9c31f387d7fd64146a55bd3b6f44f86e348
+anterior=caa23232f9c487e43e243a95de9db968884a56cb8be5f90df409244db3fd522c
+senales=3
