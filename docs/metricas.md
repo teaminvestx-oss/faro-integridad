@@ -1,9 +1,20 @@
 # FARO · Metodología de métricas
 
-Toda métrica visible en la app tiene aquí su fórmula y su test
-(`tests/metrics.test.mjs`, se ejecuta con `npm test`). El código que las
-calcula vive en un único módulo: [`js/metrics.js`](../js/metrics.js).
+Toda métrica visible en la app tiene aquí su fórmula y su test. El código que las
+calcula vive en un único módulo: [`js/metrics.js`](https://getfaro.org/js/metrics.js).
 **Una métrica sin fórmula documentada y sin test no se despliega.**
+
+**Qué se puede abrir desde fuera de lo que cita este documento.** Se publica también en el
+registro público de integridad (`faro-integridad`), y no todo lo que nombra viaja con él:
+
+- **Público.** Lo que cita de `js/` es el código que corre en el navegador: getfaro.org lo
+  sirve en `https://getfaro.org/js/…`, empezando por
+  [`js/metrics.js`](https://getfaro.org/js/metrics.js).
+- **Interno.** Los tests (`tests/…`) y las réplicas de servidor (`supabase/…`) viven en el
+  repositorio de FARO, que es privado: no se publican con este documento y getfaro.org no los
+  sirve. Se nombran para que se sepa qué comprueba cada regla, no para ejecutarlos desde fuera.
+  Lo que sí se ejecuta desde el registro es su propia comprobación, `node tools/sellar.mjs --check`,
+  que explica su README.
 
 ## Reglas transversales de credibilidad (Fase 0)
 
@@ -12,7 +23,7 @@ calcula vive en un único módulo: [`js/metrics.js`](../js/metrics.js).
 2. **Win rate SIN topes, con su intervalo**: se muestra el **valor real** —incluidos
    el 0% y el 100%— acompañado del **intervalo de Wilson al 95%** y del tamaño de
    muestra. (Corregido LIGA193, 3-ago-2026: esta regla decía «se capa a [5%, 95%],
-   nunca se muestra 0% ni 100%» y llevaba tiempo siendo falsa —`js/metrics.js:98`
+   nunca se muestra 0% ni 100%» y llevaba tiempo siendo falsa —`js/metrics.js`
    dice «valor real, sin tope» y /metodologia publica «sin topes artificiales»—.
    El tope se sustituyó por el intervalo porque capar es maquillar: 7 de 7 es 100%,
    y lo honesto no es escribir 95% sino decir que su intervalo va del orden de
@@ -43,10 +54,14 @@ signo = +1 si LONG, −1 si SHORT
 
 ### Win rate — `winRate(ganadas, cerradas)`
 ```
-win rate % = ganadas / cerradas · 100   (capado a [5, 95])
-ganada  = señal con status hit_tp1 o hit_tp2
-cerrada = señal con status hit_tp1, hit_tp2 o hit_sl
+win rate % = ganadas / cerradas evaluables · 100, el valor real sin tope y con su intervalo de Wilson al 95 %
+ganada     = hit_tp1 o hit_tp2, o un cierre a mercado (plazo o anticipado) con retorno > 0   (sigGanadora)
+evaluable  = cerrada cuyo resultado se puede saber: un cierre a mercado sin dirección declarada
+             no gana ni pierde, y sale del numerador y del denominador   (aciertoDe, LIGA-15)
 ```
+(LIGA695 · esta línea decía que el acierto se recortaba al intervalo del 5 al 95 %, lo que LIGA193
+retiró del código y de la regla 2 de arriba; y las dos de debajo, que solo ganaba un objetivo y solo
+contaban tres estados, que es de antes de LIGA-15. Las tres, como hace `js/metrics.js`.)
 Las señales `anulada` (en ventana de 5 min), `expirada` (zona sin activar en
 30 días) y `pendiente` **no cuentan** en ninguna métrica: ni como ganadas ni
 como perdidas. Permanecen visibles con su estado y motivo.
@@ -119,7 +134,11 @@ y esas imágenes viajan fuera de la plataforma con el sello «verificado».
 - La función vive en `js/metrics.js`. `supabase/functions/og-card/index.ts` la
   **duplica** porque corre en Deno sin bundler; `tests/track-record.test.mjs`
   ejecuta las dos implementaciones contra las mismas señales y exige el mismo
-  número, así que no pueden divergir.
+  número, así que no pueden divergir. (El badge la duplica también:
+  `tests/badge.test.mjs` ejecuta las tres.)
+- **Una diferida viva no se valora aquí** (LIGA695): ni en el flotante, ni en el total, ni en
+  «sin precio». Se cuenta aparte en `openDiferidas`, una clave que solo aparece cuando hay
+  alguna. Ver «Publicación diferida», abajo.
 
 ### Rentabilidad media por operación — `avgReturn(retornos)`
 ```
@@ -192,6 +211,9 @@ Las puertas salen de **una sola llamada** a `FaroMetrics.nivelGates(señales)` �
 - **`null` en cualquier puerta = inevaluable = NO se aprueba.** Quien no tiene ningún
   stop registrado no asciende: la condición no se puede evaluar y no se le asigna un
   stop a posteriori. Permanece en el nivel que sus otras puertas le den.
+- **De quien publica en diferido** (LIGA695), cada señal suya sellada en diferido que siga
+  viva cuenta en las tres puertas como **−1R constante**, también la que espera su entrada:
+  su R flotante revelaría su entrada y su stop. Ver «Publicación diferida», abajo.
 
 **El % de acierto dejó de ser criterio de nivel en la v3.** Sigue publicándose como
 dato descriptivo (con su «provisional» hasta las 20 cerradas), pero no abre ni cierra
@@ -239,9 +261,13 @@ orden (dentro de cada división) = R acumulada a mercado del periodo
 - **Sin señales con stop → `null`, jamás `0R`**: esa fila cae al final de su división
   rotulada «R no disponible». Un 0 se lee «ni ganó ni perdió»; lo cierto es «no se
   puede saber».
+- **Quien publica en diferido compite en su división como todos** (LIGA709; LIGA695 lo
+  apartaba en su propia lista): la clave de orden es `FaroMetrics.rVentana`, la suma de las
+  puertas de nivel, en la que cada diferida viva cuenta −1R. Ver «Publicación diferida», abajo.
 - Las abiertas entran **enteras** aunque haya ventana: una posición viva es riesgo de
   HOY, no del periodo en que se abrió (misma convención que `trackRecord` para el %).
-- **Empate técnico aparte: quien tiene 0 cerradas va al final de su división**
+- **Empate técnico aparte: quien no tiene en la ventana ningún cierre MEDIDO —una cerrada
+  con stop declarado (`rN > 0`, `_rkClasifica`, LIGA621)— va al final de su división**
   (LIGA-6), por alta que sea su R flotante. La R se enseña entera y el flotante sigue
   puntuando —es lo que impide subir no cerrando las perdedoras—, pero un resultado
   flotante no es un resultado hasta que se cierra, y adelantar con él a quien sí tiene
@@ -304,12 +330,12 @@ Una señal `pendiente` se activa solo cuando el precio toca la zona; su
 desde ahí — nunca desde un precio que el mercado no tocó.
 
 Desde LIGA157 la detección no depende solo del último precio de cada sondeo
-(cada 5 min): si una **vela de 15 minutos** posterior a la publicación pisó la
-banda, la señal se activa aunque el precio ya se haya ido. La entrada estampada
+(cada 5 min): si una **vela** posterior a la publicación pisó la banda —desde LIGA186 la
+escalera empieza en la de 1 minuto—, la señal se activa aunque el precio ya se haya ido. La entrada estampada
 sigue siendo un precio negociado de verdad: el **borde de la banda cruzado**
 (donde ejecutaría una limitada puesta en la zona; long entra por `zone_high`,
 short por `zone_low`) o el **cierre de la vela** si quedó entera dentro. El
-evento `activated` lleva `via: `vela_<resolución>`` con la resolución real de la vela que activó (LIGA461: era `"vela_15m"` fijo, y desde LIGA186 la escalera empieza en 1 min) y la vela usada — auditable. Una
+evento `activated` lleva `via: `vela_<resolución>`` con la resolución real de la vela que activó (LIGA461: era `"vela_15m"` fijo, y desde LIGA186 la escalera empieza en 1 min) y la hora de esa vela, que la línea de vida pública enseña como la hora de la activación. La vela misma —su máximo y su mínimo— no se publica: es dato del proveedor, y su licencia no deja enseñarlo (LIGA680). Una
 zona expirada jamás se reactiva.
 
 ### A qué precio cierra una señal (LIGA-33)
@@ -484,7 +510,64 @@ granos) se usa el **contrato continuo de referencia** y la ficha lo dice.
 El titular de toda superficie pública (perfil, tarjeta, ranking sin filtro de
 clase, informe mensual) es **total a mercado = realizado + flotante**: la única
 cifra que no miente por omisión. El realizado solo, la media por operación y
-cualquier ventana acompañan SIEMPRE con su etiqueta y su muestra.
+cualquier ventana acompañan SIEMPRE con su etiqueta y su muestra. **La excepción es quien
+publica en diferido** (LIGA695): de él no hay total a mercado, y su titular es lo realizado.
+
+## Publicación diferida · lo que no se valora mientras vive (LIGA695 · PASO 7)
+
+Un emisor en diferido **no publica rentabilidad flotante** —ni en %, ni en R, ni dentro de un
+total a mercado— mientras sus señales viven. En el ranking compite con todos (LIGA709, que
+sustituye a la **lista separada** por **R realizada** de LIGA695) y en su cifra cada diferida viva
+cuenta −1R (decisión 5 del programa de publicación diferida). No es un
+criterio sino aritmética: el resultado en vivo de una señal es una cuenta entre su entrada y su
+stop, y publicarlo los revelaría. Con una sola señal, el % flotante da la entrada en una
+lectura y la R, lineal en el precio, entrada y stop en dos; #188 midió que un agregado de tres
+vivas, leído por quien mire la página cada 5 minutos, da las direcciones en un día y las entradas
+en tres.
+
+```
+diferida viva    = se SELLÓ en diferido  y  status ∈ {pending, open}      (diferidaViva)
+                   (el estado vacío cuenta como viva: falla cerrado; y la base
+                    no admite una diferida sin estado, así que no se da)
+en juego         = diferida viva que no espera su entrada                  (diferidaEnJuego)
+emisor diferido  = su modo es 'diferido'  o  le queda alguna diferida viva (emisorDiferido)
+puertas de nivel : cada diferida viva cuenta −1R, constante               (R_DIFERIDA_VIVA)
+ranking          : la misma suma que las puertas, para todos (LIGA709)   (rVentana)
+```
+
+- **Una sola definición**, en `js/metrics.js`. og-card y el badge la copian palabra por
+  palabra (COPIA LITERAL 695) porque leen la tabla con la clave de servicio y la vista no les
+  tapa nada; `tests/liga695b.test.mjs` ejecuta el módulo, las dos copias y la función SQL
+  `faro_senal_retenida` sobre las mismas filas. La única diferencia con la base es el estado
+  vacío: la base no lo retiene y lo serviría entero; aquí cuenta como viva.
+- **`trackRecord` y `rTrackRecord` no la valoran** (frontera única): ni flotante, ni total, ni
+  «sin precio» —tiene precio, y lo que no hay es permiso para publicarlo—. La cuentan en
+  `openDiferidas`.
+- **Todas las superficies del emisor** —tarjeta, perfil, informe, curva, las dos PNG, og-card,
+  el badge y `/a/<alias>`— publican solo lo cerrado, rotulado «realizado», y donde iría lo vivo
+  dicen **«N en juego (diferido, se valoran al cerrarse)»** (`difEnJuegoTxt`, una frase para
+  todas). Nunca «+0,0 %» ni «sin precio». En la curva, sin la cola «+ abiertas a precio de hoy»;
+  en el informe, «—» en «flotante HOY». La fila del ranking dice en ese sitio **«N diferidas
+  vivas (−1R cada una hasta cerrarse)»** (`_rkAbiertasTxt`), porque en su cifra sí cuentan.
+- **En el ranking** (LIGA709: desde el 29-sep el ranking es común) compite en su división —o en la
+  tabla de emisores automatizados— con la misma clave que todos, `rVentana`: lo cerrado del
+  periodo, lo abierto en abierto a precio de hoy acotado a −1R, y cada diferida viva a −1R
+  constante, también con un filtro de clase (su clase no es pública hasta que se cierra). Sin diferidas vivas, la clave es exactamente la de antes. Junto a su nombre, un
+  candado (`_difChip`). Ya no hay lista aparte: la de LIGA695 ordenaba por lo cerrado, y en ella
+  se podía subir no cerrando las perdedoras; con −1R por viva, no.
+- **Las puertas de nivel**: cada diferida viva cuenta **−1R** —lo peor que admite su stop—
+  desde que se sella hasta que se cierra, también la pendiente. Constante en (precio, entrada,
+  stop): no revela nada, y nunca puntúa por encima de lo que puntuaría en abierto. Al cerrarse
+  cuenta su R real. Las que selló en abierto cuentan como en abierto. El badge lo replica.
+- **Los agregados de plataforma**: el simulador «Todos» la deja fuera y dice cuántas; los KPI de
+  «Mis señales» ni la cuentan ni la nombran (LIGA708: no está en ese feed); y el % de conflicto de
+  /transparencia la cuenta con las demás (LIGA697, B9: el conflicto no se difiere).
+- **Lo que se exporta** (las dos PNG del SPA, og-card, el badge, `/a/<alias>`) sale del cálculo
+  público lo genere quien lo genere. Su dueño y un admin ven su valor de hoy solo en su panel
+  privado, rotulado «solo tú lo ves».
+- **La prueba es de invariancia** (#188, D15): moviendo SOLO el precio, la entrada y el stop de
+  las diferidas vivas, ni un byte cambia en ninguna superficie pública —el SPA para cuatro
+  lectores, og-card, el badge y el estático—, con un control nulo y un control positivo.
 
 ## Rentabilidad por mes e informe mensual (LIGA165 · LIGA166)
 

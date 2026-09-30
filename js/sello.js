@@ -34,20 +34,39 @@
  * Con la PUBLICACIÓN DIFERIDA hay señales cuyos parámetros no son públicos mientras la
  * operación vive. Para ellas lo de arriba es imposible por construcción: nadie de fuera
  * puede calcular su huella todavía, porque le faltan los datos. FARO la COMPROMETE al
- * publicar —y esa huella se ancla en la ventana normal de la cadena, no antes— y se
- * RECALCULA al revelarse.
+ * publicar —en cuanto se cierra su ventana de corrección, con una lectura de solo lectura
+ * que lee lo que su huella necesita— y la publica en el registro como COMPROMISO, aparte y
+ * con su propia prueba de tiempo; y se RECALCULA al revelarse.
  *
- * OJO CON ESA VENTANA, que es donde esta cabecera ya se pasó una vez: decía «la ancla ese
+ * Por eso esas señales llevan su propio payload, `faro-sello-v2`: el de siempre con una
+ * línea más al final, `nonce=`, 32 bytes aleatorios que nacen en la base con la señal y
+ * se revelan con sus niveles. Sin ellos la huella comprometida se podría adivinar
+ * probando: lo que se oculta —un instrumento, una dirección, unos niveles cerca del precio
+ * de un instante público— tiene pocas posibilidades. La versión va en la primera línea,
+ * así que todo lo sellado con `faro-sello-v1` se sigue verificando igual, byte a byte, y
+ * una señal en abierto se sigue sellando con `faro-sello-v1`.
+ *
+ * Y una fila diferida SIN su nonce —la que la lectura pública sirve mientras la operación
+ * vive, con él retenido— no tiene huella: este módulo se niega a calcularla y lo dice.
+ * Calcularla sin él daría una huella `faro-sello-v1` con toda la pinta de buena, que es la
+ * de una señal que no existe.
+ *
+ * OJO CON EL «CUÁNDO», que es donde esta cabecera ya se pasó una vez: decía «la ancla ese
  * mismo día», y la cadena NO hace eso. Ancla días UTC COMPLETOS a la mañana siguiente, así
- * que en el peor caso pasan unas 27 horas — lo dice esta misma herramienta y lo dice la
- * página. Prometer el anclaje antes de que exista es prometer la prueba externa justo en la
- * franja en la que todavía no la hay, que es la única franja donde importa.
+ * que en el peor caso pasan unas 33 horas, y más el día que el trabajo falla (medido con el
+ * historial de ejecuciones del trabajo de integridad). Lo que llega antes es el COMPROMISO,
+ * y de él solo hay objetivos DECLARADOS, fijados antes de medir: en el registro como mucho
+ * 15 minutos después de cerrarse la ventana de corrección, y en un bloque de Bitcoin antes
+ * de 24 horas desde la publicación. Los mide el ensayo del programa, y hasta entonces no se
+ * dan por cumplidos: prometer una prueba externa que nadie ha visto llegar es prometerla
+ * justo en la franja en que aún no la hay, la única donde importa.
  *
  * O sea que la frase «la huella no se guarda nunca» deja de ser cierta en absoluto: hay
- * exactamente una huella persistida por señal diferida, y solo durante su ventana. Es el
- * único punto donde este diseño cede, y cede a cambio de algo: al revelarse, esa huella
- * demuestra MÁS que la de una señal en abierto — que el compromiso existía antes de que
- * el mercado se moviera.
+ * exactamente una huella persistida por señal diferida —la de su compromiso, en el
+ * registro público, que no se retira—. Es el único punto donde este diseño cede, y cede a
+ * cambio de algo: al revelarse, esa huella dice MÁS que la de una señal en abierto: desde
+ * cuándo existía el compromiso, la fecha que da su prueba de tiempo; con la operación viva,
+ * solo si esa fecha es anterior a su cierre (una corta puede cerrarse antes que Bitcoin).
  *
  * Esto se escribe aquí porque este comentario es el argumento original que había que leer
  * antes de ceder. Dejarlo prometiendo el absoluto mientras el sistema ya no lo cumple
@@ -60,10 +79,35 @@
   var VERSION = 'faro-sello-v1';
   var VERSION_CADENA = 'faro-cadena-v1';
 
+  /* LIGA692 · `faro-sello-v2`, la de una señal en publicación diferida. NO cambia la lista de
+   * campos ni su orden: es el payload de la v1, línea a línea, con la versión nueva en la primera
+   * y UNA línea más al final, `nonce=`. Por eso una señal sin nonce —toda señal en abierto— sale
+   * exactamente como antes, y la v1 no hay que volver a verificarla con nada nuevo.
+   *
+   * QUÉ DECIDE LA VERSIÓN: que la fila traiga su nonce. Y lo que NO puede pasar: que una fila
+   * DIFERIDA llegue sin él y salga una v1, porque sería una huella con toda la pinta de buena y
+   * la de un texto que no se ha sellado nunca. «Diferida» es lo que dice la propia fila: su modo
+   * (`modo_publicacion`, que la lectura pública sirve siempre en claro) o la marca con la que la
+   * vista dice que la ha servido retenida (`detalle_retenido`). Con cualquiera de las dos y sin
+   * nonce, este módulo se NIEGA (`SIN_NONCE`), y quien lo llama decide qué hace con una señal
+   * cuya huella no se puede calcular desde fuera todavía.
+   *
+   * `MARCA_COMPROMETIDA` es la línea con la que empieza, en el archivo del día, el bloque de una
+   * diferida que seguía viva al anclarse (sin payload: solo su id, su compromiso y su huella). Vive
+   * aquí y no en el generador porque la leen los dos: el generador, que la escribe, y el
+   * navegador, que busca en el registro el bloque de una huella y solo carga este fichero. */
+  var VERSION_V2 = 'faro-sello-v2';
+  var VERSIONES = [VERSION, VERSION_V2];
+  var COLUMNA_NONCE = 'sello_nonce';
+  var MODO_DIFERIDO = 'diferido';
+  var SIN_NONCE = 'FARO_SELLO_SIN_NONCE';
+  var MARCA_COMPROMETIDA = 'comprometida · se revela en estado terminal';
+
   /* Los campos que definen el COMPROMISO del analista, en orden fijo. Este orden es
    * parte del formato: cambiarlo cambia todas las huellas. Si alguna vez hay que tocar
-   * la lista, se sube a `faro-sello-v2` y las huellas viejas siguen verificándose con
-   * las reglas de la v1 — por eso la versión va en la primera línea del payload. */
+   * la lista, se sube la versión y las huellas viejas siguen verificándose con las
+   * reglas de la suya — por eso la versión va en la primera línea del payload. (La v2 no
+   * la toca: añade el nonce al final, detrás de la tesis.) */
   var CAMPOS = [
     ['id', 'id'],
     ['analista', 'trader_id'],
@@ -153,19 +197,40 @@
     return '';
   }
 
+  /** LIGA692 · ¿Dice la fila que es de una señal en publicación diferida? (su modo, o la marca de la vista) */
+  function esDiferida(fila) {
+    var m = fila.modo_publicacion, r = fila.detalle_retenido;
+    return !!((m && m.tipo === 'string' && m.valor === MODO_DIFERIDO)
+      || (r && r.tipo === 'bool' && r.valor === 'true'));
+  }
+
+  /** LIGA692 · La negativa: una diferida sin su nonce no tiene huella calculable. */
+  function errorSinNonce() {
+    var e = new Error('esta fila es de una señal en publicación diferida y no trae su nonce (la lectura '
+      + 'pública lo retiene, con sus niveles, mientras la operación vive): su huella ' + VERSION_V2
+      + ' no se puede calcular con ella. Una huella ' + VERSION + ' de esta fila sería la de un texto '
+      + 'que no se ha sellado nunca, así que no se da ninguna.');
+    e.code = SIN_NONCE;
+    return e;
+  }
+
   /**
    * El texto canónico de una señal. UTF-8, líneas separadas por LF, CON salto final.
    * `hashTesis` es la huella de la tesis (hex) o '' si no hay tesis — se pasa ya
    * calculada porque hashear es asíncrono en el navegador y este trozo tiene que ser
-   * síncrono y comprobable a ojo.
+   * síncrono y comprobable a ojo. LIGA692 · con nonce, `faro-sello-v2`; una diferida sin
+   * él lanza (`SIN_NONCE`) en vez de dar un texto que no es el suyo.
    */
   function payload(fila, hashTesis) {
-    var lineas = [VERSION];
+    var nonce = valor(fila, [COLUMNA_NONCE]);
+    if (!nonce && esDiferida(fila)) throw errorSinNonce();
+    var lineas = [nonce ? VERSION_V2 : VERSION];
     for (var i = 0; i < CAMPOS.length; i++) {
       var def = CAMPOS[i];
       lineas.push(def[0] + '=' + valor(fila, def.slice(1)));
     }
     lineas.push('tesis_sha256=' + (hashTesis || ''));
+    if (nonce) lineas.push('nonce=' + nonce);
     return lineas.join('\n') + '\n';
   }
 
@@ -190,6 +255,9 @@
   /** Huella de una señal a partir del TEXTO JSON crudo de su fila. */
   function huellaDeJson(jsonTexto) {
     var fila = crudo(jsonTexto);
+    // LIGA692 · la negativa, ANTES de hashear nada y por el mismo camino que la huella: quien la
+    // espera recibe el rechazo, con su `code`, y no una huella que no es la de nadie.
+    if (!valor(fila, [COLUMNA_NONCE]) && esDiferida(fila)) return Promise.reject(errorSinNonce());
     var tesis = fila.thesis;
     var p = (tesis && tesis.tipo === 'string' && tesis.valor !== '')
       ? sha256(tesis.valor) : Promise.resolve('');
@@ -220,7 +288,9 @@
 
   var api = {
     VERSION: VERSION, VERSION_CADENA: VERSION_CADENA, CAMPOS: CAMPOS,
-    crudo: crudo, payload: payload, sha256: sha256,
+    VERSION_V2: VERSION_V2, VERSIONES: VERSIONES, COLUMNA_NONCE: COLUMNA_NONCE,
+    MODO_DIFERIDO: MODO_DIFERIDO, SIN_NONCE: SIN_NONCE, MARCA_COMPROMETIDA: MARCA_COMPROMETIDA,
+    crudo: crudo, payload: payload, sha256: sha256, esDiferida: esDiferida,
     huellaDeJson: huellaDeJson, textoCadena: textoCadena, digestDia: digestDia,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
