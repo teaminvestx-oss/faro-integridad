@@ -1,0 +1,329 @@
+# FARO · Registro de integridad · el COMPROMISO de una señal en publicación diferida · LIGA692
+# ---------------------------------------------------------------------------
+# ESTE FICHERO ES LA FUENTE, Y NO CORRE DONDE ESTÁ. Vive en el repositorio de FARO como
+# integridad/compromiso.yml y se INSTALA A MANO, tal cual y una sola vez, en el registro
+# público (teaminvestx-oss/faro-integridad) como .github/workflows/compromiso.yml. La pasada
+# diaria de la cadena, que vive en el repositorio de FARO, comprueba cada mañana que la copia
+# instalada es ESTA, byte a byte, y el trabajo falla si no lo es.
+# No se instala solo, y es a propósito: el token con el que esa pasada escribe en el registro
+# no puede tocar workflows, y no debe poder, porque sería poder cambiar el único workflow que
+# tiene una credencial de lectura.
+#
+# LIGA692 · revisión · Y ESO NO BASTABA, porque el código que recibe la credencial no vive aquí:
+# `tools/sellar.mjs` y `js/sello.js` son ficheros del registro, y los puede cambiar cualquiera
+# con permiso de CONTENIDO sobre él —la pasada diaria de FARO los reescribe cada mañana con ese
+# permiso, y el token del Vault que avisa (`github_compromisos`) tiene el mismo—. Con solo eso se
+# podía subir un generador propio, pedir un aviso y leer con el JWT del lector lo que retienen
+# TODAS las diferidas vivas, en un registro de ejecución que es público: la revisión lo ejecutó.
+# Así que el generador que corre con la credencial está FIJADO EN ESTE FICHERO, por el sha256 de
+# sus dos ficheros, y este fichero no lo cambia ningún permiso de contenido (hace falta el de
+# workflows, que no tiene ningún token de FARO). Lo que se ejecuta es una COPIA comprobada, en un
+# directorio propio: ni un enlace ni un package.json del registro cambian qué carga node.
+# EL PRECIO, dicho: cada cambio de `tools/sellar.mjs` o de `js/sello.js` en FARO cambia la lista
+# de abajo (la suite del repositorio de FARO lo exige) y obliga a volver a instalar este fichero, el
+# MISMO DÍA del merge y antes de la pasada de la mañana siguiente, que es la que trae el
+# generador nuevo al registro. Por eso la lista admite DOS pares: el nuevo se añade y el anterior
+# se queda hasta el cambio siguiente, y así ningún compromiso falla entre la instalación y esa
+# pasada. Si no se instala, la pasada diaria lo dice como DISTINTO y falla al final, y desde esa
+# mañana este workflow se niega a ejecutar el generador nuevo: ningún compromiso se escribe hasta
+# que se instale.
+#
+# QUÉ HACE, Y NADA MÁS: escribe el compromiso de UNA señal en publicación diferida. Mientras
+# una diferida vive, su instrumento, su dirección y sus niveles no son públicos, así que nadie
+# de fuera puede calcular su huella. Cuando se cierra su ventana de corrección (5 minutos), la
+# base de FARO avisa aquí —un repository_dispatch de tipo «compromiso» con el id de la señal,
+# desde faro_pide_compromisos(), un cron que SOLO AVISA— y este workflow:
+#   1 · comprueba que el id es el de una señal (un UUID), sin meterlo nunca dentro de un script;
+#   2 · comprueba que el generador del registro es uno de los aprobados AQUÍ (abajo), y ejecuta
+#       una copia suya, `tools/sellar.mjs --compromiso <id>` —el mismo generador que ejecuta
+#       cualquiera—, con la única credencial de lectura de todo el sistema de integridad;
+#   3 · sella el archivo nuevo con OpenTimestamps (sin parar si los calendarios fallan: la
+#       huella no depende de ellos, y la pasada diaria sella al día siguiente lo que quede);
+#   4 · lo publica en este registro, mide cuándo ha llegado contra su plazo declarado, y
+#       comprueba que lo publicado es lo escrito.
+# El archivo es integridad/compromisos/AAAA-MM/<id>.txt (el mes de la publicación, en UTC), en
+# formato faro-compromiso-v1: el id, la fecha de publicación, la versión del sello y la huella.
+# Ni el payload, ni un nivel, ni el instrumento, ni el nonce. La cadena diaria ancla después
+# ESA MISMA huella en el archivo del día.
+#
+# DOS PLAZOS, FIJADOS ANTES DE MEDIRLOS (decisión 3.3): el compromiso aquí como mucho 15
+# minutos después de cerrarse la ventana de corrección, y su prueba de tiempo en un bloque de
+# Bitcoin antes de 24 horas desde la publicación. Son OBJETIVOS: los mide el ensayo del
+# programa. El primero es el de LLEGAR aquí, y este workflow lo mide al subir el compromiso —no
+# cuando el generador calcula la huella, que es antes del sellado de tiempo y de los reintentos
+# del push—; si queda fuera, lo levanta como aviso del run. El segundo lo vigila la pasada diaria.
+#
+# POR QUÉ AQUÍ, Y NO EN LA BASE NI EN UNA FUNCIÓN DEL SERVIDOR: la huella es la de js/sello.js,
+# y escribirla otra vez —en SQL, o en otra función con su propio cliente de OpenTimestamps—
+# sería una segunda implementación de la serialización más delicada de todo esto, que se
+# equivocaría en silencio con una huella que parece buena. Aquí es la misma función que usan
+# la pasada diaria y el navegador. La base solo avisa.
+#
+# LA CREDENCIAL, que es lo único delicado de este fichero: FARO_LECTOR_SELLO_JWT, en los
+# secretos de ESTE repositorio. Es un JWT del rol faro_lector_sello (lo crea una migración de
+# la base de FARO), de SOLO LECTURA: lee de signals, de TODAS las señales públicas, las columnas
+# que la huella necesita —también las que la lectura pública retiene a una diferida viva—; no
+# tiene permiso de escritura sobre ninguna tabla, y no puede ejecutar ninguna función que no
+# pueda ejecutar ya cualquiera con la clave anon. Nunca la clave de servicio. Caduca (la herramienta
+# de FARO que lo firma le pone 90 días por defecto, y 366 como mucho), la recibe SOLO el paso
+# que la usa, por el entorno, y tools/sellar.mjs la valida antes de mandarla —rol y caducidad—
+# y no la repite en ningún mensaje. Los registros de este workflow son públicos (el repositorio
+# lo es), así que nada de lo que imprime puede llevar lo que la diferida retiene: sellar.mjs
+# solo dice el id, la fecha, el estado y la huella, que es lo que se publica.
+#
+# EL ID NUNCA SE PEGA DENTRO DE UN SCRIPT. El client_payload lo escribe cualquiera que tenga un
+# token con permiso sobre este repositorio, y una expresión de GitHub dentro de un `run:` se
+# sustituye ANTES de que bash lo lea: un id como `x"; curl … #` se ejecutaría. Así que el id
+# entra por el entorno, se valida como UUID en el primer paso, y los demás reciben solo el ya
+# validado (una salida de ese paso).
+#
+# LAS PUBLICACIONES SE ORDENAN SOLAS, sin cola: cada ejecución añade un archivo nuevo y
+# distinto, así que si otra sube antes —otro compromiso, o la pasada diaria de la cadena, que
+# también escribe aquí— esta trae lo nuevo (git pull --rebase) y vuelve a subir encima, sin
+# conflicto posible. El grupo de concurrencia es POR SEÑAL, y no uno solo, a propósito: GitHub
+# guarda como mucho UNA ejecución pendiente por grupo y cancela la anterior cuando llega otra,
+# así que con un grupo único el tercer compromiso de un mismo minuto cancelaría el segundo —y
+# la base ya lo habría dado por aceptado—. Por señal, dos avisos de la misma se ordenan, y el
+# segundo encuentra el archivo y no escribe nada.
+name: Compromiso de una señal diferida
+
+on:
+  repository_dispatch:
+    types: [compromiso]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: compromiso-${{ github.event.client_payload.id }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  comprometer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # LIGA692 · revisión · las dos acciones, FIJADAS POR SU COMMIT y no por su etiqueta: una etiqueta
+      # se mueve, y setup-node decide qué `node` ejecuta el paso que recibe la credencial. Son las que
+      # la etiqueta v4 señalaba el 28-sep-2026 (checkout v4.4.0 y setup-node v4.4.0, leídas con
+      # `git ls-remote`). Moverlas es cambiar este fichero, y volver a instalarlo.
+      # LIGA702 · E7 (Joaquín, 29-sep: `persist-credentials: false`) · el checkout NO deja su token en
+      # .git/config. El paso siguiente ejecuta el generador con la credencial del lector, y no tiene por
+      # qué ver un token que escribe en este registro. Lo recibe SOLO el paso que publica, y solo `git
+      # push` y `git pull` lo usan (allí se explica cómo).
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: '22' }
+
+      - name: Comprobar el id de la señal
+        id: senal
+        env:
+          ID: ${{ github.event.client_payload.id }}
+        run: |
+          # Un UUID en minúsculas y nada más. `[[ =~ ]]` compara la cadena ENTERA: un salto de
+          # línea dentro no se cuela, como sí se colaría por un grep, que mira línea a línea.
+          if [[ ! "$ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+            echo "::error::el aviso no trae el id de una señal (un UUID en minúsculas): no se lee nada ni se escribe nada"
+            exit 1
+          fi
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+          echo "señal $ID"
+
+      - name: Escribir el compromiso
+        id: escribe
+        env:
+          ID: ${{ steps.senal.outputs.id }}
+          FARO_LECTOR_SELLO_JWT: ${{ secrets.FARO_LECTOR_SELLO_JWT }}
+        run: |
+          # LIGA692 · revisión · EL GENERADOR QUE RECIBE LA CREDENCIAL ES UNO DE LOS APROBADOS AQUÍ, O NO
+          # CORRE (la cabecera dice por qué). Cada línea es un par, «sha256 de tools/sellar.mjs» y «sha256
+          # de js/sello.js», de un generador de FARO; como mucho dos: el de ahora y el anterior.
+          APROBADOS='
+          0a1597c464c95baefc9c5789dc115fa51a4f3530c42f452d815a8efd4f58a01e 95eb4b1623022ffae561fe27df8d2e85393049b7e4bf844bb4109aa6fb1a9686
+          1746c72299a57d4ed9aac6265091b2d64e87182eb17a55a08b7eeaadc1e1385b 95eb4b1623022ffae561fe27df8d2e85393049b7e4bf844bb4109aa6fb1a9686
+          '
+          # Se copian los dos a un directorio propio y se comprueba LA COPIA, que es lo que se ejecuta.
+          # En su sitio no valdría: si tools/sellar.mjs fuera un enlace, node resolvería `../js/sello.js`
+          # desde donde apunta, y cargaría un sello que no es el comprobado; y un package.json del
+          # registro cambiaría cómo lo carga. Lo único que la copia ve del registro es integridad/,
+          # donde escribe (un enlace a la de este checkout).
+          G=$(mktemp -d /tmp/generador.XXXXXX)
+          mkdir -p "$G/tools" "$G/js" integridad
+          for f in tools/sellar.mjs js/sello.js; do
+            if [ ! -f "$f" ]; then
+              echo "::error::este registro no tiene $f: no se ejecuta nada con la credencial del lector"
+              exit 1
+            fi
+            cp "$f" "$G/$f"
+          done
+          ln -s "$PWD/integridad" "$G/integridad"
+          ESTE="$(sha256sum < "$G/tools/sellar.mjs" | cut -c1-64) $(sha256sum < "$G/js/sello.js" | cut -c1-64)"
+          if ! grep -qxF "$ESTE" <<< "$APROBADOS"; then
+            # Uno de antes de LIGA692 no conoce --compromiso y ejecutaría la pasada ENTERA en su lugar.
+            if ! grep -q 'export async function compromete' "$G/tools/sellar.mjs"; then
+              echo "::error::el tools/sellar.mjs de este registro es de antes de LIGA692: no sabe escribir compromisos. Lo trae la pasada diaria de la cadena desde el repositorio de FARO; hasta entonces no se escribe nada"
+            else
+              echo "::error::el generador de este registro (tools/sellar.mjs ${ESTE%% *}, js/sello.js ${ESTE##* }) no es ninguno de los aprobados en este workflow: no se ejecuta nada con la credencial del lector. Si FARO lo ha cambiado, falta volver a instalar este workflow desde integridad/compromiso.yml (la pasada diaria de la cadena lo dice como DISTINTO); si no, alguien ha tocado el generador del registro: míralo antes que nada"
+            fi
+            exit 1
+          fi
+          node "$G/tools/sellar.mjs" --compromiso "$ID" | tee /tmp/compromiso.txt
+          # Lo que se pide, comprobado en el disco y no en la salida: el compromiso de ESTA señal
+          # tiene que existir, recién escrito o de antes. Si no, algo ha salido 0 sin hacerlo.
+          F=""
+          if [ -d integridad/compromisos ]; then
+            F=$(find integridad/compromisos -mindepth 2 -maxdepth 2 -name "$ID.txt" -print -quit)
+          fi
+          if [ -z "$F" ]; then
+            echo "::error::tools/sellar.mjs ha salido bien y el compromiso de $ID no está en integridad/compromisos/: no se publica nada"
+            exit 1
+          fi
+          if grep -q 'ya está en estado terminal' /tmp/compromiso.txt; then
+            echo "::warning::la señal $ID ya se había revelado cuando llegó su compromiso: este no demuestra que existiera antes"
+          fi
+          # Regla J · el plazo declarado de la llegada (MISMO_DIA) y la ventana de corrección los dice el
+          # generador COMPROBADO, no este fichero; los usa el paso que publica, que es donde se mide. Por
+          # el entorno y no como argumento: con la ruta en argv[1], sellar.mjs se creería ejecutado.
+          if PLAZO=$(SELLAR="$G/tools/sellar.mjs" node --input-type=module -e "const m = await import(process.env.SELLAR); console.log(m.MISMO_DIA.registroTrasVentanaMin + ' ' + m.VENTANA_CORRECCION_MIN)"); then
+            echo "plazo=$PLAZO" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::no se pudo leer del generador el plazo declarado: la llegada de este compromiso no se medirá"
+          fi
+          {
+            echo "### Compromiso de la señal $ID"
+            echo '```'
+            cat /tmp/compromiso.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Sellar el compromiso en el tiempo (OpenTimestamps)
+        # FAIL-OPEN, como el sellado de la pasada diaria (LIGA233): los calendarios son terceros y
+        # la huella no depende de ellos. Solo el archivo que ha escrito ESTA ejecución: uno que ya
+        # estaba lo sella la pasada diaria si se quedó sin prueba, y sellarlo aquí también
+        # daría dos pruebas distintas del mismo archivo peleándose por el mismo nombre.
+        env:
+          ID: ${{ steps.senal.outputs.id }}
+        run: |
+          NUEVO=$(git status --porcelain --untracked-files=all -- integridad/compromisos/ | sed -n 's/^?? //p' | grep -E "/$ID\.txt$" || true)
+          if [ -z "$NUEVO" ]; then
+            echo "el compromiso de $ID ya estaba publicado: no se vuelve a sellar"
+            exit 0
+          fi
+          if [ "$GITHUB_ACTIONS" != "true" ]; then
+            echo "(fuera del runner de GitHub: sellado de tiempo omitido a propósito)"
+            exit 0
+          fi
+          if ! pip3 install --quiet opentimestamps-client==0.7.2; then
+            echo "::warning::no se pudo instalar opentimestamps-client: el compromiso se publica sin prueba de tiempo y la pasada diaria lo sella mañana"
+            exit 0
+          fi
+          export PATH="$HOME/.local/bin:$PATH"
+          if ! command -v ots >/dev/null 2>&1; then
+            echo "::warning::el cliente ots no está disponible: el compromiso se publica sin prueba de tiempo y la pasada diaria lo sella mañana"
+            exit 0
+          fi
+          if timeout 120 ots stamp "$NUEVO"; then
+            echo "sellado $NUEVO.ots (pendiente hasta que Bitcoin confirme)"
+          else
+            echo "::warning::no se pudo sellar $NUEVO (¿calendarios caídos?): se publica sin prueba de tiempo y la pasada diaria lo sella mañana"
+          fi
+
+      - name: Publicar el compromiso en el registro
+        env:
+          ID: ${{ steps.senal.outputs.id }}
+          PLAZO: ${{ steps.escribe.outputs.plazo }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # LIGA702 · E7 · el token de este job, SOLO para subir y para traer lo nuevo: `con_token` se lo da
+          # a git por el entorno (GIT_CONFIG_*), y no en la línea de órdenes ni en .git/config, que es
+          # lo mismo que hace actions/checkout cuando lo deja puesto. El resto de este paso no lo usa.
+          AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          echo "::add-mask::$AUTH"
+          con_token() { GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.https://github.com/.extraheader GIT_CONFIG_VALUE_0="$AUTH" git "$@"; }
+          git add integridad/compromisos/
+          if git diff --cached --quiet; then
+            echo "nada que publicar: el compromiso de $ID ya estaba en el registro"
+            exit 0
+          fi
+          # Solo el compromiso de ESTA señal y su prueba. Cualquier otra cosa en compromisos/ que
+          # esta ejecución haya cambiado es un fallo: un compromiso publicado no se toca nunca.
+          OTROS=$(git diff --cached --name-only | grep -v -E "^integridad/compromisos/[0-9]{4}-[0-9]{2}/$ID\.txt(\.ots)?$" || true)
+          if [ -n "$OTROS" ]; then
+            echo "::error::esta ejecución cambia en compromisos/ algo que no es el compromiso de $ID: no se publica nada"
+            echo "$OTROS"
+            exit 1
+          fi
+          git config user.name  "FARO · integridad"
+          git config user.email "noreply@getfaro.org"
+          git commit -q -m "compromiso de $ID" -m "$(cat /tmp/compromiso.txt)"
+          # Si otra ejecución —otro compromiso, o la pasada diaria— ha subido antes, se trae lo
+          # suyo y se sube encima: cada una añade archivos distintos, así que no hay conflicto
+          # posible. Si lo hubiera, se deshace y se para: no se resuelve un conflicto en el registro.
+          PUBLICADO=0
+          for i in 1 2 3 4 5 6; do
+            if con_token push origin "HEAD:$GITHUB_REF_NAME"; then PUBLICADO=1; break; fi
+            sleep $((2**i))
+            if ! con_token pull --rebase origin "$GITHUB_REF_NAME"; then
+              if [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
+                git rebase --abort
+                echo "::error::lo nuevo del registro choca con el compromiso de $ID: no se resuelve a mano ni se publica"
+                exit 1
+              fi
+              echo "::warning::no se pudo traer lo nuevo del registro (intento $i): se vuelve a probar"
+            fi
+          done
+          if [ "$PUBLICADO" != "1" ]; then
+            echo "::error::no se pudo publicar el compromiso de $ID tras seis intentos"
+            exit 1
+          fi
+          # Regla M · el plazo declarado (decisión 3.3) es el de LLEGAR al registro, y se mide AHORA,
+          # recién subido: no cuando el generador calculó la huella, que fue antes del sellado de tiempo
+          # y de los reintentos de este bucle. Desde que se cierra la ventana de corrección, que se
+          # cuenta desde la fecha de publicación que el propio compromiso lleva escrita.
+          read -r OBJ VENTANA <<< "${PLAZO:-}"
+          PUB=$(sed -n 's/^publicada=//p' integridad/compromisos/*/"$ID".txt 2>/dev/null | head -1 || true)
+          if [[ "${OBJ:-}" =~ ^[0-9]+$ && "${VENTANA:-}" =~ ^[0-9]+$ ]] && T0=$(date -u -d "$PUB" +%s 2>/dev/null); then
+            S=$(( $(date -u +%s) - T0 - VENTANA * 60 ))
+            MIN=$(awk -v s="$S" 'BEGIN { printf "%.1f", s / 60 }' | tr . ,)
+            if [ "$S" -le $(( OBJ * 60 )) ]; then V="dentro"; else V="FUERA del objetivo"; fi
+            LLEGA="llega al registro $MIN min después de cerrarse su ventana de corrección · objetivo declarado: como mucho $OBJ min · $V"
+            echo "$LLEGA"
+            echo "$LLEGA" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$V" != "dentro" ]; then
+              echo "::warning::el compromiso de $ID llega más tarde que su plazo declarado: $LLEGA"
+            fi
+          else
+            echo "::warning::no se puede medir cuándo ha llegado el compromiso de $ID contra su plazo declarado"
+          fi
+
+      - name: CRÍTICO · comprobar que lo publicado ES lo que se escribió
+        # La lección del 13-ago, la de la pasada diaria: un trabajo que publica sin mirar lo
+        # publicado puede salir en verde con el registro vacío. Se clona DE CERO y se compara.
+        env:
+          ID: ${{ steps.senal.outputs.id }}
+        run: |
+          rm -rf /tmp/comprobacion
+          git clone -q --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/comprobacion
+          FALLOS=0
+          VISTOS=0
+          for f in integridad/compromisos/*/"$ID".txt integridad/compromisos/*/"$ID".txt.ots; do
+            [ -f "$f" ] || continue
+            VISTOS=$((VISTOS+1))
+            if ! cmp -s "$f" "/tmp/comprobacion/$f"; then
+              echo "::error::$f NO está publicado, o lo publicado no coincide con lo escrito"
+              FALLOS=1
+            fi
+          done
+          if [ "$VISTOS" = "0" ]; then
+            echo "::error::no hay ningún compromiso de $ID que comprobar"
+            exit 1
+          fi
+          [ "$FALLOS" = "0" ] || exit 1
+          echo "verificado: el compromiso de $ID está publicado y coincide ($VISTOS archivo(s))"
