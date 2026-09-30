@@ -262,8 +262,8 @@ orden (dentro de cada división) = R acumulada a mercado del periodo
   rotulada «R no disponible». Un 0 se lee «ni ganó ni perdió»; lo cierto es «no se
   puede saber».
 - **Quien publica en diferido compite en su división como todos** (LIGA709; LIGA695 lo
-  apartaba en su propia lista): la clave de orden es `FaroMetrics.rVentana`, la suma de las
-  puertas de nivel, en la que cada diferida viva cuenta −1R. Ver «Publicación diferida», abajo.
+  apartaba en su propia lista), con la misma clave, `rTrackRecord().totalR`: sus diferidas vivas
+  no cuentan hasta cerrarse (LIGA711). Ver «Publicación diferida», abajo.
 - Las abiertas entran **enteras** aunque haya ventana: una posición viva es riesgo de
   HOY, no del periodo en que se abrió (misma convención que `trackRecord` para el %).
 - **Empate técnico aparte: quien no tiene en la ventana ningún cierre MEDIDO —una cerrada
@@ -517,8 +517,8 @@ publica en diferido** (LIGA695): de él no hay total a mercado, y su titular es 
 
 Un emisor en diferido **no publica rentabilidad flotante** —ni en %, ni en R, ni dentro de un
 total a mercado— mientras sus señales viven. En el ranking compite con todos (LIGA709, que
-sustituye a la **lista separada** por **R realizada** de LIGA695) y en su cifra cada diferida viva
-cuenta −1R (decisión 5 del programa de publicación diferida). No es un
+sustituye a la **lista separada** por **R realizada** de LIGA695), y desde LIGA711 sus diferidas
+vivas no entran en su cifra hasta cerrarse (decisión 5 del programa de publicación diferida). No es un
 criterio sino aritmética: el resultado en vivo de una señal es una cuenta entre su entrada y su
 stop, y publicarlo los revelaría. Con una sola señal, el % flotante da la entrada en una
 lectura y la R, lineal en el precio, entrada y stop en dos; #188 midió que un agregado de tres
@@ -532,7 +532,7 @@ diferida viva    = se SELLÓ en diferido  y  status ∈ {pending, open}      (di
 en juego         = diferida viva que no espera su entrada                  (diferidaEnJuego)
 emisor diferido  = su modo es 'diferido'  o  le queda alguna diferida viva (emisorDiferido)
 puertas de nivel : cada diferida viva cuenta −1R, constante               (R_DIFERIDA_VIVA)
-ranking          : la misma suma que las puertas, para todos (LIGA709)   (rVentana)
+ranking          : una diferida viva no cuenta hasta cerrarse (LIGA711) (rTrackRecord)
 ```
 
 - **Una sola definición**, en `js/metrics.js`. og-card y el badge la copian palabra por
@@ -548,13 +548,15 @@ ranking          : la misma suma que las puertas, para todos (LIGA709)   (rVenta
   dicen **«N en juego (diferido, se valoran al cerrarse)»** (`difEnJuegoTxt`, una frase para
   todas). Nunca «+0,0 %» ni «sin precio». En la curva, sin la cola «+ abiertas a precio de hoy»;
   en el informe, «—» en «flotante HOY». La fila del ranking dice en ese sitio **«N diferidas
-  vivas (−1R cada una hasta cerrarse)»** (`_rkAbiertasTxt`), porque en su cifra sí cuentan.
+  vivas (no cuentan hasta cerrarse)»** (`_rkAbiertasTxt`).
 - **En el ranking** (LIGA709: desde el 29-sep el ranking es común) compite en su división —o en la
-  tabla de emisores automatizados— con la misma clave que todos, `rVentana`: lo cerrado del
-  periodo, lo abierto en abierto a precio de hoy acotado a −1R, y cada diferida viva a −1R
-  constante, también con un filtro de clase (su clase no es pública hasta que se cierra). Sin diferidas vivas, la clave es exactamente la de antes. Junto a su nombre, un
-  candado (`_difChip`). Ya no hay lista aparte: la de LIGA695 ordenaba por lo cerrado, y en ella
-  se podía subir no cerrando las perdedoras; con −1R por viva, no.
+  tabla de emisores automatizados— con la misma clave que todos, `rTrackRecord().totalR`: lo
+  cerrado del periodo y lo abierto en abierto a precio de hoy, acotado a −1R. Sus diferidas vivas no
+  cuentan hasta que se cierran (LIGA711, decisión del 30-sep; LIGA709 las contaba a −1R), y al
+  cerrarse entran con su R real. Junto a su nombre, un candado (`_difChip`). La contrapartida, dicha
+  también en /metodologia: mientras una perdedora siga viva no le resta, así que en esta cifra se
+  podría subir sin cerrarla; lo acotan el plazo de cada clase de activo y las puertas de nivel, donde
+  sí cuenta −1R.
 - **Las puertas de nivel**: cada diferida viva cuenta **−1R** —lo peor que admite su stop—
   desde que se sella hasta que se cierra, también la pendiente. Constante en (precio, entrada,
   stop): no revela nada, y nunca puntúa por encima de lo que puntuaría en abierto. Al cerrarse
