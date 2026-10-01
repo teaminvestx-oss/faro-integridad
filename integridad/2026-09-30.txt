@@ -1,0 +1,129 @@
+# FARO · integridad · 2026-09-30
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# Cubre las señales publicadas el 2026-09-30 (día UTC).
+#
+# ──────────────────────────────────────────────────────────────────────────
+# NOTA · 4 señal(es) ancladas ANTES DE TIEMPO por un defecto
+# de este generador, ya corregido. Entre el 12 y el 25 de agosto de 2026 se anclaron
+# señales PENDIENTES: señales cuya entrada no la fija el analista al publicar sino el
+# mercado al llegar a su precio, días después. Se anclaron con «entrada=» vacía, que
+# era la verdad de ese momento, y al activarse esa línea se ha rellenado.
+#
+# Su huella ya no coincide, y eso NO es una manipulación: es el único cambio que la
+# activación produce. Se puede comprobar sin creernos nada — el payload anclado está
+# en el archivo que se cita, y la única línea distinta es «entrada=». Si cambiara
+# cualquier otra cosa, o si «entrada» pasara de un precio a otro precio, esto
+# aparecería arriba como INCIDENCIA y no aquí; la comprobación la hace el código que
+# publicamos, no una decisión de quien genera el archivo.
+#
+#   señal    d27f14b7-9277-4d97-9a4f-d9144b8ff9b3  (hit_sl)
+#   anclada  5d7a421660c2f5fa5d43ba8c5011af4ac9d98156d6a6485a23c42a9754b478e3  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    b1a8ed6cd1abfd41dfaba1cdf9b0d487c0a65b345508fe96ec90fb98446f7afe  (entrada=1.15745)
+#
+#   señal    76e1f747-8f1b-430c-ae36-7e939efc9288  (hit_sl)
+#   anclada  e1e06f4d9a21b66bb3d8f8c1e3d7ac502ffa430976f9f195c94460f7bd38f9e4  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    2668a54a06555740cb33efcde73858a8a3f1d85e3dfd0e9539a11d5b1aee0a27  (entrada=1.3526)
+#
+#   señal    99427213-efef-4f52-b79e-36233da3bab2  (hit_sl)
+#   anclada  dc0574ef1d7c6269aaf501af81b2a0ed99dd9234da07759545b271d86d776c55  (en 2026-08-25.txt, con entrada vacía)
+#   ahora    9e4fc7a9a5aad48e102ffc1c88635e68ca05cd9fdfbf58ed646ae1bfb78dc568  (entrada=0.5942476391792297)
+#
+#   señal    a7bf69cb-ad52-4e0e-9527-4809d7d16ff3  (hit_sl)
+#   anclada  9ee826432ecf02b58702336c4202929f9d34a0e7d7d82007803b670bf3fd2778  (en 2026-08-25.txt, con entrada vacía)
+#   ahora    0ed7861aea907aea0f92b13970633b2ab3a5c193fe27ffb21737472559ca6df5  (entrada=0.7075)
+#
+# No se re-ancla ni se corrige lo publicado: la cadena es inmutable a propósito, y
+# tapar un error propio reescribiendo el registro sería peor que el error.
+# Desde la corrección, una señal solo entra en la cadena cuando su contenido sellado
+# ya no puede cambiar, así que esta lista solo puede menguar.
+# ──────────────────────────────────────────────────────────────────────────
+#
+# ──────────────────────────────────────────────────────────────────────────
+# NOTA · 17 señal(es) públicas que esta cadena NO ANCLA, y no anclaría nunca.
+# Su entrada ya no puede cambiar —son a mercado, o ya terminaron—, pero no están marcadas
+# como definitivas («entry_final»), y aquí solo se ancla lo que lo está. Mientras sigan así,
+# nada de este registro prueba que no cambien. No se dejan fuera en silencio: se dicen aquí,
+# cada día, hasta que se marquen; entonces se anclan, y el archivo de ese día dice que son estas.
+#
+#   no se ancla  01d6a860-2569-42cc-a1d9-5675791a52e0  publicada 2026-08-27T05:52:08.76+00:00  (market, closed_analyst)  aprobada por Telegram
+#   no se ancla  c138f6d4-78b0-44f3-b258-9d4939b1e5dc  publicada 2026-08-27T05:52:17.77+00:00  (market, closed_analyst)  aprobada por Telegram
+#   no se ancla  e4a28cb7-1a22-494e-860c-1c60c046311c  publicada 2026-08-28T14:17:40.693+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  f48bcadd-673d-425f-a3fc-a6aade89c26c  publicada 2026-09-01T13:30:38.75+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  eba81a97-c3ea-4c2d-94ce-0efa38b2af71  publicada 2026-09-01T14:43:28.729+00:00  (market, hit_tp1)  aprobada por Telegram
+#   no se ancla  1ac96894-6f50-4527-bd39-a18ce1218a80  publicada 2026-09-01T14:43:33.686+00:00  (market, hit_tp1)  aprobada por Telegram
+#   no se ancla  2b2a2bb2-e7a3-49e6-9598-3b00c5596e78  publicada 2026-09-03T13:30:57.492+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  9e01a316-1f85-4beb-9581-e0ad33d2a89b  publicada 2026-09-04T14:08:30.085+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  6f07d3aa-1dba-4b07-bbac-e5c94ce31803  publicada 2026-09-09T13:16:24.504+00:00  (levels, closed_analyst)  causa sin identificar
+#   no se ancla  33f8e71c-6941-4655-af93-7ed8958bb352  publicada 2026-09-15T13:33:56.456+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  db5ca972-88d7-4100-8075-0f469717a454  publicada 2026-09-17T13:33:49.419+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  4ca136f7-16e8-4640-a785-806b582434fe  publicada 2026-09-19T10:55:49.143+00:00  (market, closed_analyst)  aprobada por Telegram
+#   no se ancla  a3e7e2d0-ec2e-46b8-8ab9-ba225980341c  publicada 2026-09-20T06:04:56.31+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  21e012d7-119f-44ea-a39e-e5f9e0053887  publicada 2026-09-26T17:13:54.125+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  7c0be504-0849-4d8f-ae07-2c57348fb10a  publicada 2026-09-28T13:39:17.318+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  2ed2cf58-0741-47e8-8a55-5f76565274ef  publicada 2026-09-28T13:52:42.821+00:00  (market, open)  aprobada por Telegram
+#   no se ancla  41f9b466-451e-472f-9d1f-541992cdfcde  publicada 2026-09-29T13:31:25.317+00:00  (market, open)  aprobada por Telegram
+#
+# Publicadas entre el 2026-08-27 y el 2026-09-29 (día UTC).
+# Las aprobadas por Telegram tienen una causa conocida: create-signal las publicaba sin
+# marcarlas, y así esta cadena se las saltaba. Lo corrige su versión LIGA698, que las marca
+# al crearlas y al aprobarlas.
+# Las demás no tienen todavía una causa identificada.
+#
+# Su corrección está atada a esta lista: la migración que las marca se niega a correr si
+# lo que ve no da esta huella (sha256 de los ids, ordenados, uno por línea y con salto final):
+#     a513863315af505eff17d60b7075fa49c9236d33c2d202096864fc859b82aa54
+# ──────────────────────────────────────────────────────────────────────────
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+faro-sello-v1
+id=7d33c4a7-f188-4c07-9778-1b81b13c4c9b
+analista=bandito03
+simbolo=EURUSD
+direccion=short
+tipo=market
+entrada=1.1362
+zona_min=
+zona_max=
+stop=1.1369
+objetivo1=1.13408
+objetivo2=
+publicada=2026-09-30T14:12:29.274+00:00
+metodologia=v2
+tesis_sha256=52008732ee0d8398e06746b8e99048de1c1abacc83f9e31afcab10bd50f0f2a3
+huella=b774bae6b7089a870215b946c0390fdc2457990f4766f0ae0838f9adfc2417da
+
+faro-sello-v1
+id=bbef7f13-803a-4310-b7f1-a3ee4594f4e6
+analista=claudia
+simbolo=XAUUSD
+direccion=long
+tipo=levels
+entrada=4150.7
+zona_min=4150.7
+zona_max=4150.7
+stop=4135
+objetivo1=4181
+objetivo2=4200
+publicada=2026-09-30T14:09:01.293+00:00
+metodologia=v2
+tesis_sha256=92ac2bac77215e14686c0108fb8027f0318ad57736152a329a3df9e11482a3f7
+huella=cb9f46ac48db88a84a53abab88e56be1bb12ff19f5091a64527f963faaa718ef
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-09-30
+#   anterior=3e4d7b683826dd9fc42a0351d7dad4229a3dddeefbd7a3637c34f0e3b08d32a5
+#   b774bae6b7089a870215b946c0390fdc2457990f4766f0ae0838f9adfc2417da
+#   cb9f46ac48db88a84a53abab88e56be1bb12ff19f5091a64527f963faaa718ef
+digest=eba94ab2bc9bd17fb87e1fb885ce0891ac7c16c89a10a1476d86f27547ccc3b7
+anterior=3e4d7b683826dd9fc42a0351d7dad4229a3dddeefbd7a3637c34f0e3b08d32a5
+senales=2
