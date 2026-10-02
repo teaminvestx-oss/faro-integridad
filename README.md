@@ -201,8 +201,8 @@ Lo escribe el workflow `.github/workflows/compromiso.yml` de este repositorio, c
 escrito el sha256 de los generadores que acepta, y no ejecuta otro—, y con la **única
 credencial de lectura** de todo el sistema de integridad, una de **solo lectura**: lee, de
 todas las señales públicas, las columnas que su huella necesita —también las que la lectura
-pública retiene—; no tiene permiso de escritura sobre ninguna tabla, y no puede ejecutar
-ninguna función que no pueda ejecutar ya cualquiera con la clave anon. Sus ejecuciones son
+pública retiene—; no tiene permiso de escritura sobre ninguna tabla de FARO, y no puede
+escribir ni ejecutar nada que no pueda ya cualquiera con la clave anon. Sus ejecuciones son
 públicas, en la pestaña Actions de este repositorio.
 
 **2 · Después, el archivo del día, con dos formas nuevas de bloque.** A la mañana siguiente

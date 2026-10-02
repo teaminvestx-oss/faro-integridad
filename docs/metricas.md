@@ -546,7 +546,9 @@ ranking          : una diferida viva no cuenta hasta cerrarse (LIGA711) (rTrackR
 - **Todas las superficies del emisor** —tarjeta, perfil, informe, curva, las dos PNG, og-card,
   el badge y `/a/<alias>`— publican solo lo cerrado, rotulado «realizado», y donde iría lo vivo
   dicen **«N en juego (diferido, se valoran al cerrarse)»** (`difEnJuegoTxt`, una frase para
-  todas). Nunca «+0,0 %» ni «sin precio». En la curva, sin la cola «+ abiertas a precio de hoy»;
+  todas). De un emisor mixto —le quedan abiertas que selló en abierto— las cuenta aparte, porque
+  no son diferidas: **«1 en abierto · 3 en diferido (se valoran al cerrarse)»** (LIGA712). Nunca
+  «+0,0 %» ni «sin precio». En la curva, sin la cola «+ abiertas a precio de hoy»;
   en el informe, «—» en «flotante HOY». La fila del ranking dice en ese sitio **«N diferidas
   vivas (no cuentan hasta cerrarse)»** (`_rkAbiertasTxt`).
 - **En el ranking** (LIGA709: desde el 29-sep el ranking es común) compite en su división —o en la
