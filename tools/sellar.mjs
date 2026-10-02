@@ -618,9 +618,23 @@ function leeIndice(indice = INDICE) {
  * rango de fechas, señales afectadas y qué se ha corregido; no se arregla sin declararlo»). Una línea por
  * señal, que empieza por `PREFIJO_NO_ANCLA` —es la que `leeDeclaradas` vuelve a leer—, y la huella de la
  * lista, que es lo que la corrección exige que se le copie de aquí: sin esta NOTA publicada no corre. */
+/* LIGA717 · LAS CAUSAS QUE SE CONOCEN, y la que no se conoce se dice así. Cada una es un hecho del código,
+ * no una suposición: la de Telegram, `create-signal` antes de LIGA698; la del cierre, que el cierre del
+ * analista (inmediato en `create-signal`, encolado en `update-prices`) era el único camino que terminaba una
+ * señal sin marcar su entrada —los tests del repositorio de FARO lo derivan de las dos Edge Functions y del
+ * guard, y exigen que sea este estado y solo este—. Lo corrige la base desde LIGA717.
+ * Una sola función para la NOTA y para la consola: dos sitios que dijeran la causa acabarían diciendo dos. */
+export const CERRADA_SIN_MARCAR = 'closed_analyst';
+export function causaNoAncla(s) {
+  if (s.telegram) return 'aprobada por Telegram';
+  if (s.estado === CERRADA_SIN_MARCAR) return 'cerrada por el analista';
+  return 'causa sin identificar';
+}
+
 export function notaNoAncla(lista, huella) {
   const dias = lista.map((s) => diaDe(s.publicada)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
   const deTelegram = lista.filter((s) => s.telegram).length;
+  const deCierre = lista.filter((s) => causaNoAncla(s) === 'cerrada por el analista').length;
   return ['#',
     '# ──────────────────────────────────────────────────────────────────────────',
     '# NOTA · ' + lista.length + ' señal(es) públicas que esta cadena NO ANCLA, y no anclaría nunca.',
@@ -631,14 +645,18 @@ export function notaNoAncla(lista, huella) {
     '#',
     ...lista.map((s) => PREFIJO_NO_ANCLA + s.id + '  publicada ' + (s.publicada || '(sin fecha)')
       + '  (' + (s.tipo || 'sin tipo') + ', ' + (s.estado || 'sin estado') + ')  '
-      + (s.telegram ? 'aprobada por Telegram' : 'causa sin identificar')),
+      + causaNoAncla(s)),
     '#',
     ...(dias.length ? ['# Publicadas entre el ' + dias[0] + ' y el ' + dias[dias.length - 1] + ' (día UTC).'] : []),
     ...(deTelegram ? [
       '# Las aprobadas por Telegram tienen una causa conocida: create-signal las publicaba sin',
       '# marcarlas, y así esta cadena se las saltaba. Lo corrige su versión LIGA698, que las marca',
       '# al crearlas y al aprobarlas.'] : []),
-    ...(deTelegram < lista.length ? ['# Las demás no tienen todavía una causa identificada.'] : []),
+    ...(deCierre ? [
+      '# Las cerradas por el analista también tienen una causa conocida: su cierre, inmediato o',
+      '# encolado, no las marcaba, y una escalonada que se cerraba antes de llenar todos sus puntos',
+      '# se quedaba así. Lo corrige la base desde LIGA717: toda señal que termina queda marcada.'] : []),
+    ...(deTelegram + deCierre < lista.length ? ['# Las demás no tienen todavía una causa identificada.'] : []),
     '#',
     '# Su corrección está atada a esta lista: la migración que las marca se niega a correr si',
     '# lo que ve no da esta huella (sha256 de los ids, ordenados, uno por línea y con salto final):',
@@ -881,7 +899,7 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
      * `undefined`, y entonces se cae a la regla de LIGA-109, que era correcta aunque
      * incompleta. Nunca se ancla de más por no tener el dato. */
     const fin = campos.entry_final?.valor;
-    const definitiva = fin === undefined
+    let definitiva = fin === undefined
       ? (campos.status?.valor || '') !== 'pending'   // sin columna: la regla de LIGA-109
       : fin === 'true';
     const id = (campos.id && campos.id.valor) || '';
@@ -891,6 +909,12 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
      * y que tiene que ser la comprometida. Una en abierto, como siempre. */
     const diferida = (campos.modo_publicacion?.valor || '') === DIFERIDA.modo;
     const viva = diferida && DIFERIDA.vivos.includes(campos.status?.valor || '');
+    /* LIGA718 · Y UNA DIFERIDA ES DEFINITIVA DESDE QUE SE COMPROMETE. La regla de LIGA-110 existe porque
+     * la huella de una en abierto cambia mientras su entrada pueda cambiar; la de una diferida no cambia
+     * nunca: a mercado, su entrada se estampó al publicar, y pendiente, su entrada va VACÍA en el texto
+     * sellado (`js/sello.js`: la fija el mercado). Se ancla por su compromiso el día de su publicación,
+     * como todas, en vez de esperar a activarse y entrar como tardía. */
+    if (diferida) definitiva = true;
     let comp = null;
     if (diferida) {
       comp = compromisos.get(id) || { error: SIN_ARCHIVO };
@@ -924,7 +948,8 @@ export async function genera({ escribir = true, hasta = null, dir = DIR } = {}) 
         /* LIGA692 · Una diferida ya anclada se comprueba contra lo anclado Y contra su compromiso:
          * si el compromiso publicado ya no dice lo que se ancló, alguien ha tocado el registro; si
          * lo revelado no da lo comprometido, alguien ha tocado la señal. Las dos son incidencias, y
-         * se dice cuál. (El defecto de LIGA-114 no aplica: una diferida solo puede ser a mercado.) */
+         * se dice cuál. (El defecto de LIGA-114 no aplica: la huella de una diferida no cambia al activarse,
+         * porque una pendiente sella su entrada vacía, LIGA718.) */
         const motivos = [];
         if (comp.huella !== ya.huella) motivos.push(`su compromiso (${comp.ruta}) ya no dice la huella que se ancló`);
         if (!viva && huella !== comp.huella) motivos.push(`lo revelado no da la huella comprometida en ${comp.ruta}`);
@@ -1297,7 +1322,7 @@ if (process.argv[1] && process.argv[1].endsWith('sellar.mjs')) {
       }
       if (noAnclables?.length) {
         console.log('\nNOTA · ' + noAnclables.length + ' señal(es) públicas que la cadena NO ANCLA y no anclaría nunca (definitivas sin marcar):');
-        for (const s of noAnclables) console.log(`  ${s.id} · ${s.publicada} · ${s.tipo || 'sin tipo'}, ${s.estado || 'sin estado'} · ${s.telegram ? 'aprobada por Telegram' : 'causa sin identificar'}`);
+        for (const s of noAnclables) console.log(`  ${s.id} · ${s.publicada} · ${s.tipo || 'sin tipo'}, ${s.estado || 'sin estado'} · ${causaNoAncla(s)}`);
         console.log('  huella de la lista: ' + huellaNoAnclables);
       }
       if (alteradas.length) {

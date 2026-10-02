@@ -46,6 +46,17 @@
  * así que todo lo sellado con `faro-sello-v1` se sigue verificando igual, byte a byte, y
  * una señal en abierto se sigue sellando con `faro-sello-v1`.
  *
+ * LIGA718 · Y UNA DIFERENCIA MÁS, la única: en `faro-sello-v2`, la línea `entrada=` de una
+ * orden PENDIENTE (a zona o escalonada) va SIEMPRE vacía. Su entrada no la decide quien la
+ * emite: la fija el mercado al tocarla, después de sellarse, y un compromiso que se publica a
+ * los cinco minutos no puede cubrir algo que todavía no existe (lo de LIGA-110: en una orden
+ * pendiente la entrada no es un compromiso, es un RESULTADO). Con ella vacía, la huella de
+ * una diferida pendiente no cambia al activarse, y su compromiso vale hasta que se revela. Lo
+ * que sí sella es todo lo que decide quien la emite —instrumento, dirección, zona, stop,
+ * objetivos y tesis—; la entrada se comprueba contra el mercado, como el precio de cierre. Y
+ * así una diferida pendiente puede existir: hasta LIGA718 se rechazaba («de momento, solo a
+ * mercado», decisión 3.2), a la espera de un compromiso en dos fases que esto hace innecesario.
+ *
  * Y una fila diferida SIN su nonce —la que la lectura pública sirve mientras la operación
  * vive, con él retenido— no tiene huella: este módulo se niega a calcularla y lo dice.
  * Calcularla sin él daría una huella `faro-sello-v1` con toda la pinta de buena, que es la
@@ -224,10 +235,13 @@
   function payload(fila, hashTesis) {
     var nonce = valor(fila, [COLUMNA_NONCE]);
     if (!nonce && esDiferida(fila)) throw errorSinNonce();
+    // LIGA718 · en `faro-sello-v2` (solo una diferida lleva nonce), la entrada de lo que no es a
+    // mercado no se sella: la fija el mercado después (la cabecera). Vacía, siempre.
+    var sinEntrada = !!nonce && valor(fila, ['signal_type']) !== 'market';
     var lineas = [nonce ? VERSION_V2 : VERSION];
     for (var i = 0; i < CAMPOS.length; i++) {
       var def = CAMPOS[i];
-      lineas.push(def[0] + '=' + valor(fila, def.slice(1)));
+      lineas.push(def[0] + '=' + (sinEntrada && def[0] === 'entrada' ? '' : valor(fila, def.slice(1))));
     }
     lineas.push('tesis_sha256=' + (hashTesis || ''));
     if (nonce) lineas.push('nonce=' + nonce);

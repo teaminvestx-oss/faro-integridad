@@ -563,6 +563,12 @@ ranking          : una diferida viva no cuenta hasta cerrarse (LIGA711) (rTrackR
   desde que se sella hasta que se cierra, también la pendiente. Constante en (precio, entrada,
   stop): no revela nada, y nunca puntúa por encima de lo que puntuaría en abierto. Al cerrarse
   cuenta su R real. Las que selló en abierto cuentan como en abierto. El badge lo replica.
+- **Qué admite el diferido** (LIGA718): a mercado y también órdenes pendientes —a zona o
+  escalonadas—, cuya entrada no se sella (la fija el mercado al tocarla, y su línea `entrada=`
+  va vacía en `faro-sello-v2`). Lo que no admite es una pendiente con su **contraria pendiente**
+  en el mismo activo (OCO): al activarse una, la otra se cancela, y lo cancelado se revela
+  entero —con ello el activo y la dirección de la que sigue viva—. Mientras vive, de una
+  pendiente diferida es público si ya ha entrado y cuándo, no su instrumento ni sus niveles.
 - **Los agregados de plataforma**: el simulador «Todos» la deja fuera y dice cuántas; los KPI de
   «Mis señales» ni la cuentan ni la nombran (LIGA708: no está en ese feed); y el % de conflicto de
   /transparencia la cuenta con las demás (LIGA697, B9: el conflicto no se difiere).

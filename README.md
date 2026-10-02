@@ -53,7 +53,8 @@ Lo que te vas a encontrar, y conviene saber leer:
   valida más tarde). Entra en el archivo del día en que entró al registro, y la cabecera
   lo dice. Su fecha real de publicación está en el campo `publicada` de su payload, sin
   retocar: si el anclaje fuera muy posterior a la publicación, lo ves ahí. No es la única
-  causa: una señal cuya entrada fija el mercado entra el día que queda fijada, y una que esta
+  causa: una señal en abierto cuya entrada fija el mercado entra el día que queda fijada (una
+  diferida, no: entra el día de su publicación, por su compromiso), y una que esta
   cadena se saltaba sin deber, el día que se corrige; de esas últimas, una NOTA en ese mismo
   archivo dice cuáles son (ver las dos NOTAS de abajo).
 - **Bloques `⚠ INCIDENCIA DE INTEGRIDAD`.** Cada día se recalcula la huella de **todo** lo
@@ -212,8 +213,10 @@ ese archivo empieza por `faro-archivo-v2`. Sus bloques son de una de estas tres 
 - de `faro-sello-v1` a `tesis_sha256=`: una señal en abierto, como siempre;
 - de `faro-sello-v2` a `nonce=`: una diferida ya revelada. Es el payload de siempre con la
   versión nueva en la primera línea y una línea más al final, un nonce aleatorio de 32 bytes
-  que impedía adivinar su huella probando mientras la operación vivía. Se recalcula igual,
-  con `sha256sum`, de `faro-sello-v2` a `nonce=`, ambas incluidas y con salto final;
+  que impedía adivinar su huella probando mientras la operación vivía; y si era una orden
+  pendiente (a zona o escalonada), con la línea `entrada=` vacía (abajo, «Entrada»). Se
+  recalcula igual, con `sha256sum`, de `faro-sello-v2` a `nonce=`, ambas incluidas y con salto
+  final;
 - `comprometida · se revela en estado terminal`, seguida de `id=`, `compromiso=` y
   `huella=`: una diferida que seguía viva al anclarse. Sin payload. Su huella es la de su
   compromiso —la línea `compromiso=` dice cuál— y tiene que ser la misma.
@@ -256,6 +259,7 @@ Para construir el payload:
 | **Tesis** | SHA-256 de sus bytes UTF-8, sin normalizar ni recortar. Vacío si no hay tesis |
 | **Versión** | La primera línea: `faro-sello-v1` para una señal en abierto; `faro-sello-v2` para una en publicación diferida. Si algún día cambia el formato, será otra versión y esto seguirá valiendo para lo viejo |
 | **Nonce** | Solo en `faro-sello-v2`: una línea más al final, `nonce=` y sus 64 caracteres hexadecimales tal cual los da la API (`sello_nonce`) |
+| **Entrada** | Solo en `faro-sello-v2`: si `signal_type` no es `market` —una orden pendiente, a zona o escalonada—, la línea `entrada=` va **vacía**, traiga la API la entrada que traiga. Esa entrada no la decide el emisor: la fija el mercado al tocarla, después de sellarse, y así la huella que se comprometió el día de su publicación sigue siendo la suya cuando se revela. En `faro-sello-v1` la entrada se sella siempre, como hasta ahora |
 
 **Sobre los números, que es donde esto se rompe:** una entrada real vale
 `1.1544678211212158`. Si la parseas a coma flotante y la vuelves a imprimir, el resultado
@@ -376,7 +380,11 @@ Decirlo entero es parte del trato:
    Telegram, y desde que la cadena solo ancla lo marcado esas no se anclaban. Lo corrige su versión
    LIGA698; las de antes se marcan con una corrección atada a la huella de la lista publicada, y el
    archivo del día en que se anclan lo recuerda. De ellas, esto prueba que no han cambiado desde
-   que se anclaron, no desde que se publicaron.
+   que se anclaron, no desde que se publicaron. Y pasó con otra, que la NOTA dijo primero como
+   «causa sin identificar»: el cierre del analista no marcaba la señal que cerraba, así que una
+   escalonada cerrada antes de llenar todos sus puntos se quedaba fuera. Lo corrige la base desde
+   LIGA717 —toda señal que termina queda marcada, la cierre quien la cierre—, y la de antes se
+   marca igual: con una corrección atada a la huella de la lista.
 
 Si algo de esto te parece insuficiente, tienes razón en decirlo: escríbenos. Preferimos la
 pregunta incómoda a un sistema que parezca más sólido de lo que es.
