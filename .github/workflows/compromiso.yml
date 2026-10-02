@@ -146,8 +146,8 @@ jobs:
           # CORRE (la cabecera dice por qué). Cada línea es un par, «sha256 de tools/sellar.mjs» y «sha256
           # de js/sello.js», de un generador de FARO; como mucho dos: el de ahora y el anterior.
           APROBADOS='
+          64b954d3b7828136f8aaf68d5312d43b38ec12ea5d5dc5c064efb94d6c1bdb1b 6d76f0419eb9003518a337ef43cfdc97c642f7915579e19ff710b3bc4aa8173c
           0a1597c464c95baefc9c5789dc115fa51a4f3530c42f452d815a8efd4f58a01e 95eb4b1623022ffae561fe27df8d2e85393049b7e4bf844bb4109aa6fb1a9686
-          1746c72299a57d4ed9aac6265091b2d64e87182eb17a55a08b7eeaadc1e1385b 95eb4b1623022ffae561fe27df8d2e85393049b7e4bf844bb4109aa6fb1a9686
           '
           # Se copian los dos a un directorio propio y se comprueba LA COPIA, que es lo que se ejecuta.
           # En su sitio no valdría: si tools/sellar.mjs fuera un enlace, node resolvería `../js/sello.js`
