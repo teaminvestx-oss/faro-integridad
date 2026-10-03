@@ -211,9 +211,10 @@ Las puertas salen de **una sola llamada** a `FaroMetrics.nivelGates(señales)` �
 - **`null` en cualquier puerta = inevaluable = NO se aprueba.** Quien no tiene ningún
   stop registrado no asciende: la condición no se puede evaluar y no se le asigna un
   stop a posteriori. Permanece en el nivel que sus otras puertas le den.
-- **De quien publica en diferido** (LIGA695), cada señal suya sellada en diferido que siga
-  viva cuenta en las tres puertas como **−1R constante**, también la que espera su entrada:
-  su R flotante revelaría su entrada y su stop. Ver «Publicación diferida», abajo.
+- **De quien publica en diferido** (LIGA695), cada señal suya sellada en diferido que ya
+  haya entrado cuenta en las tres puertas como **−1R constante**, y la que espera su entrada,
+  0, como en abierto (LIGA720): su R flotante revelaría su entrada y su stop. Ver «Publicación
+  diferida», abajo.
 
 **El % de acierto dejó de ser criterio de nivel en la v3.** Sigue publicándose como
 dato descriptivo (con su «provisional» hasta las 20 cerradas), pero no abre ni cierra
@@ -531,7 +532,7 @@ diferida viva    = se SELLÓ en diferido  y  status ∈ {pending, open}      (di
                     no admite una diferida sin estado, así que no se da)
 en juego         = diferida viva que no espera su entrada                  (diferidaEnJuego)
 emisor diferido  = su modo es 'diferido'  o  le queda alguna diferida viva (emisorDiferido)
-puertas de nivel : cada diferida viva cuenta −1R, constante               (R_DIFERIDA_VIVA)
+puertas de nivel : cada diferida en juego cuenta −1R, constante; la pendiente, 0 (R_DIFERIDA_VIVA)
 ranking          : una diferida viva no cuenta hasta cerrarse (LIGA711) (rTrackRecord)
 ```
 
@@ -559,10 +560,12 @@ ranking          : una diferida viva no cuenta hasta cerrarse (LIGA711) (rTrackR
   también en /metodologia: mientras una perdedora siga viva no le resta, así que en esta cifra se
   podría subir sin cerrarla; lo acotan el plazo de cada clase de activo y las puertas de nivel, donde
   sí cuenta −1R.
-- **Las puertas de nivel**: cada diferida viva cuenta **−1R** —lo peor que admite su stop—
-  desde que se sella hasta que se cierra, también la pendiente. Constante en (precio, entrada,
-  stop): no revela nada, y nunca puntúa por encima de lo que puntuaría en abierto. Al cerrarse
-  cuenta su R real. Las que selló en abierto cuentan como en abierto. El badge lo replica.
+- **Las puertas de nivel**: cada diferida en juego —la que ya ha entrado— cuenta **−1R** —lo peor
+  que admite su stop— hasta que se cierra; la que espera su entrada cuenta 0, como en abierto
+  (LIGA720, decisión del 2-oct: «no está abierta, no está activa»). Constante en (precio, entrada,
+  stop): solo depende del estado, que es público, así que no revela nada, y nunca puntúa por encima
+  de lo que puntuaría en abierto. Al cerrarse cuenta su R real. Las que selló en abierto cuentan como
+  en abierto. El badge lo replica.
 - **Qué admite el diferido** (LIGA718): a mercado y también órdenes pendientes —a zona o
   escalonadas—, cuya entrada no se sella (la fija el mercado al tocarla, y su línea `entrada=`
   va vacía en `faro-sello-v2`). Lo que no admite es una pendiente con su **contraria pendiente**
