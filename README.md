@@ -195,7 +195,7 @@ diaria la ancla igual. Las líneas de datos no cambian.
 Para el compromiso hay dos plazos, **fijados antes de medirlos**: llegar aquí **como mucho
 15 minutos** después de que la señal quede sellada, y quedar en un bloque de Bitcoin **antes
 de 24 horas** desde su publicación. **Son objetivos, no medidas**: se medirán con la primera
-señal diferida real, antes de abrir el modo a nadie más.
+señal diferida real, y hasta entonces no los damos por cumplidos.
 
 Lo escribe el workflow `.github/workflows/compromiso.yml` de este repositorio, con el mismo
 `tools/sellar.mjs` que ejecutas tú, en su otro modo (`--compromiso <id>`) —el workflow lleva
