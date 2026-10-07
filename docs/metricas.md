@@ -319,12 +319,6 @@ con stops al 0,3% y un swing con stops al 8%. Sin este dato, el lector concluye 
 mejor» donde lo que hay es «opera distinto». FARO no prohíbe ningún estilo: lo enseña —
 la misma doctrina que publicar el flotante y acompañar el acierto de su muestra.
 
-### Proximidad de zonas (Escenarios)
-```
-cerca (⚡) si |precio_actual − centro_zona| / precio_actual < 6%
-```
-`centro_zona` = media del rango de entrada del plan.
-
 ### Señales de zona (Fase 1.11 · activación por velas LIGA157)
 Una señal `pendiente` se activa solo cuando el precio toca la zona; su
 `entry` pasa a ser el **precio real de activación** y la rentabilidad se mide
