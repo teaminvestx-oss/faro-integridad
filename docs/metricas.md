@@ -421,7 +421,9 @@ tramo» porque describiría un mecanismo que no existe.
 
 De las señales cuya activación **ya se conoce** —tocadas más expiradas sin tocarse—,
 qué porcentaje llegó a activarse. **Fuera del denominador**: las pendientes (aún sin
-resolver) y las anuladas en la ventana de 5 minutos.
+resolver), las anuladas en la ventana de 5 minutos y, desde el 11-oct-2026 (LIGA796),
+las diferidas vivas: una diferida cuenta por su existencia y su estado, y en ninguna
+métrica hasta que se cierra y se revela. Al cerrarse cuenta como cualquier otra.
 
 Estaba implementada **dos veces con denominadores distintos**: el perfil público
 excluía las pendientes (correcto, es la definición de Metodología §3) y el panel
