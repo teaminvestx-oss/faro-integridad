@@ -1,0 +1,96 @@
+faro-archivo-v2
+# FARO · integridad · 2026-10-16
+#
+# Cada bloque es el payload canónico de una señal y su huella SHA-256. Puedes
+# recalcular cualquiera: guarda las líneas del payload (de «faro-sello-v1» hasta
+# «tesis_sha256=», ambas incluidas, con salto de línea final) en un archivo y ejecuta
+#     sha256sum archivo.txt
+# El resultado tiene que ser la huella de debajo. El procedimiento completo, con un
+# ejemplo paso a paso, está en getfaro.org/verificar
+#
+# ── faro-archivo-v2 · este día lleva 4 señal(es) en PUBLICACIÓN DIFERIDA ──
+# Sus bloques tienen una de estas dos formas, y el digest del final se calcula igual
+# que siempre, con TODAS las huellas del día, también estas:
+#   · de «faro-sello-v2» hasta «nonce=»: una diferida ya revelada. Es el payload de
+#     siempre con una línea más al final, un nonce aleatorio de 32 bytes que impedía
+#     adivinar su huella mientras la operación vivía. Se recalcula igual, con sha256sum,
+#     desde «faro-sello-v2» hasta «nonce=», ambas incluidas y con salto final.
+#   · «comprometida · se revela en estado terminal»: una diferida que seguía viva al
+#     anclarse. No lleva payload: su instrumento, su dirección y sus niveles no son
+#     públicos todavía. Su huella es la de su COMPROMISO, publicado antes en este mismo
+#     registro (la línea «compromiso=»), con su propia prueba de tiempo (.ots), que es
+#     la que dice desde cuándo existía. Cuando llegue a un estado terminal se revela
+#     entera, nonce incluido, y cualquiera puede recalcularla.
+#
+# Cubre las señales publicadas el 2026-10-16 (día UTC).
+#
+# ──────────────────────────────────────────────────────────────────────────
+# NOTA · 4 señal(es) ancladas ANTES DE TIEMPO por un defecto
+# de este generador, ya corregido. Entre el 12 y el 25 de agosto de 2026 se anclaron
+# señales PENDIENTES: señales cuya entrada no la fija el analista al publicar sino el
+# mercado al llegar a su precio, días después. Se anclaron con «entrada=» vacía, que
+# era la verdad de ese momento, y al activarse esa línea se ha rellenado.
+#
+# Su huella ya no coincide, y eso NO es una manipulación: es el único cambio que la
+# activación produce. Se puede comprobar sin creernos nada — el payload anclado está
+# en el archivo que se cita, y la única línea distinta es «entrada=». Si cambiara
+# cualquier otra cosa, o si «entrada» pasara de un precio a otro precio, esto
+# aparecería arriba como INCIDENCIA y no aquí; la comprobación la hace el código que
+# publicamos, no una decisión de quien genera el archivo.
+#
+#   señal    d27f14b7-9277-4d97-9a4f-d9144b8ff9b3  (hit_sl)
+#   anclada  5d7a421660c2f5fa5d43ba8c5011af4ac9d98156d6a6485a23c42a9754b478e3  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    b1a8ed6cd1abfd41dfaba1cdf9b0d487c0a65b345508fe96ec90fb98446f7afe  (entrada=1.15745)
+#
+#   señal    76e1f747-8f1b-430c-ae36-7e939efc9288  (hit_sl)
+#   anclada  e1e06f4d9a21b66bb3d8f8c1e3d7ac502ffa430976f9f195c94460f7bd38f9e4  (en 2026-08-20.txt, con entrada vacía)
+#   ahora    2668a54a06555740cb33efcde73858a8a3f1d85e3dfd0e9539a11d5b1aee0a27  (entrada=1.3526)
+#
+#   señal    99427213-efef-4f52-b79e-36233da3bab2  (hit_sl)
+#   anclada  dc0574ef1d7c6269aaf501af81b2a0ed99dd9234da07759545b271d86d776c55  (en 2026-08-25.txt, con entrada vacía)
+#   ahora    9e4fc7a9a5aad48e102ffc1c88635e68ca05cd9fdfbf58ed646ae1bfb78dc568  (entrada=0.5942476391792297)
+#
+#   señal    a7bf69cb-ad52-4e0e-9527-4809d7d16ff3  (hit_sl)
+#   anclada  9ee826432ecf02b58702336c4202929f9d34a0e7d7d82007803b670bf3fd2778  (en 2026-08-25.txt, con entrada vacía)
+#   ahora    0ed7861aea907aea0f92b13970633b2ab3a5c193fe27ffb21737472559ca6df5  (entrada=0.7075)
+#
+# No se re-ancla ni se corrige lo publicado: la cadena es inmutable a propósito, y
+# tapar un error propio reescribiendo el registro sería peor que el error.
+# Desde la corrección, una señal solo entra en la cadena cuando su contenido sellado
+# ya no puede cambiar, así que esta lista solo puede menguar.
+# ──────────────────────────────────────────────────────────────────────────
+#
+# El digest del final encadena el del día anterior, así que alterar una señal vieja
+# rompe todos los digests posteriores y no solo el suyo.
+comprometida · se revela en estado terminal
+id=0290f616-9fe8-4d8f-bc6e-2b8878539653
+compromiso=compromisos/2026-10/0290f616-9fe8-4d8f-bc6e-2b8878539653.txt
+huella=277af6f28854c20ca153ae8a292529ef03d6c8864e731800a182aecef32eed2c
+
+comprometida · se revela en estado terminal
+id=b2d34f92-cd42-4ed7-813a-a509681c3402
+compromiso=compromisos/2026-10/b2d34f92-cd42-4ed7-813a-a509681c3402.txt
+huella=6faf0abde0fadb7e6d97c216def4458fffe6e9dfbd0d96f20590ac2ac6c54867
+
+comprometida · se revela en estado terminal
+id=5ce3752a-9fad-4839-b39d-62668ecb094b
+compromiso=compromisos/2026-10/5ce3752a-9fad-4839-b39d-62668ecb094b.txt
+huella=b38f8eb05ab313b8cf3527a33ba9946e74ea44b7b381b4a836cb4a0787555741
+
+comprometida · se revela en estado terminal
+id=6203d561-13b5-402d-acf5-187e2f107d4d
+compromiso=compromisos/2026-10/6203d561-13b5-402d-acf5-187e2f107d4d.txt
+huella=cbcf64a7306336913325085deaf148a661e93ba7507bdfe362dca7f84d1a18fe
+
+# ── digest del día ──────────────────────────────────────────
+# Es el sha256 de este bloque:
+#   faro-cadena-v1
+#   fecha=2026-10-16
+#   anterior=a49b79642c18dc1963f45cb61f74f5bb9a8de87d42eb31788b36368e1340beff
+#   277af6f28854c20ca153ae8a292529ef03d6c8864e731800a182aecef32eed2c
+#   6faf0abde0fadb7e6d97c216def4458fffe6e9dfbd0d96f20590ac2ac6c54867
+#   b38f8eb05ab313b8cf3527a33ba9946e74ea44b7b381b4a836cb4a0787555741
+#   cbcf64a7306336913325085deaf148a661e93ba7507bdfe362dca7f84d1a18fe
+digest=58cf2a6234321a106402f56b80ef1290d9a3bd74693ba81592359b957a33a99a
+anterior=a49b79642c18dc1963f45cb61f74f5bb9a8de87d42eb31788b36368e1340beff
+senales=4
