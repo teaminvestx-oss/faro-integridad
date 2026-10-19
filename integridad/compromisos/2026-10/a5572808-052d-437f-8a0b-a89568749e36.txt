@@ -1,0 +1,19 @@
+# FARO · integridad · compromiso de una señal en publicación diferida
+#
+# La señal se publicó en modo diferido: mientras la operación vive, su instrumento, su
+# dirección y sus niveles no son públicos. Lo que se publica aquí es su HUELLA: el SHA-256
+# de su payload canónico faro-sello-v2, que lleva, además de los campos de siempre, un
+# nonce aleatorio de 32 bytes para que nadie pueda adivinarla probando. Este archivo no
+# lleva el payload, ni un nivel, ni el instrumento.
+#
+# Cuando la señal llegue a un estado terminal se revela entera, nonce incluido: entonces
+# cualquiera puede pedir su fila a la API pública, construir su payload faro-sello-v2
+# (getfaro.org/verificar) y comprobar que su sha256 es esta huella. La prueba de tiempo de
+# este archivo (su .ots) dice desde cuándo existía; este texto no afirma ninguna hora.
+# La cadena diaria ancla después esta misma huella, en el archivo del día.
+faro-compromiso-v1
+id=a5572808-052d-437f-8a0b-a89568749e36
+publicada=2026-10-19T13:50:43.208+00:00
+sello=faro-sello-v2
+huella=ad615a002e161822fc5b10add0fdf4f25cd2bb55f3fce8359ffcb70de5b7a6e9
+comprometida · se revela en estado terminal
